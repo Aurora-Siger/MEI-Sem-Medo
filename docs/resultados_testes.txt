@@ -1,0 +1,44 @@
+[OK] 'Qual o limite de faturamento do MEI?'                         -> ok/M1 (esperado ok/M1)
+[OK] 'quanto custa o DAS em 2026?'                                  -> ok/M2 (esperado ok/M2)
+[OK] 'Ate quando entrego a declaracao anual DASN?'                  -> ok/M3 (esperado ok/M3)
+[OK] 'MEI precisa emitir nota fiscal para pessoa fisica?'           -> ok/M4 (esperado ok/M4)
+[OK] 'O que acontece se eu ultrapassar o limite do MEI?'            -> ok/M6 (esperado ok/M6)
+[OK] 'Como abrir MEI de graca?'                                     -> ok/M7 (esperado ok/M7)
+[OK] 'O que sao CBS e IBS?'                                         -> ok/R1 (esperado ok/R1)
+[OK] 'O Pix vai ser taxado pela reforma?'                           -> ok/R6 (esperado ok/R6)
+[OK] 'Posso optar pelo Simples Hibrido?'                            -> ok/R5 (esperado ok/R5)
+[OK] 'Qual o prazo para o cliente reclamar de produto com defeito?' -> ok/C2 (esperado ok/C2)
+[OK] 'O cliente tem direito de arrependimento em compra online?'    -> ok/C3 (esperado ok/C3)
+[OK] 'Sou obrigado a trocar roupa que nao serviu?'                  -> ok/C4 (esperado ok/C4)
+[OK] 'Qual a diferenca entre garantia contratual e legal?'          -> ok/C5 (esperado ok/C5)
+[OK] ''                                                             -> vazia/None (esperado vazia/None)
+[OK] '   '                                                          -> vazia/None (esperado vazia/None)
+[OK] '?!?! 123'                                                     -> invalida/None (esperado invalida/None)
+[OK] 'receita de bolo de cenoura'                                   -> desconhecida/None (esperado desconhecida/None)
+[OK] 'nota fiscal'                                                  -> ambigua/None (esperado ambigua/None)
+[OK] 'quanto o MEI pode faturar por ano?'                           -> ok/M1 (esperado ok/M1)
+[OK] 'preciso dar nota quando vendo para um cliente comum?'         -> ok/M4 (esperado ok/M4)
+[OK] 'o cliente comprou na internet e quer devolver, pode?'         -> ok/C3 (esperado ok/C3)
+[OK] 'como tirar passaporte?'                                       -> desconhecida/None (esperado desconhecida/None)
+[OK] 'qual a previsao do tempo amanha'                              -> desconhecida/None (esperado desconhecida/None)
+[OK] 'a'                                                            -> invalida/None (esperado invalida/None)
+[OK] 'o que e split payment?'                                       -> ok/S1 (esperado ok/S1)
+[OK] 'o split vai diminuir meu fluxo de caixa?'                     -> ok/S2 (esperado ok/S2)
+[OK] 'quais as modalidades do split payment'                        -> ok/S3 (esperado ok/S3)
+[OK] 'qual anexo do Simples eu me encaixo?'                         -> ok/A2 (esperado ok/A2)
+[OK] 'como calcular a aliquota efetiva do Simples'                  -> ok/A4 (esperado ok/A4)
+[OK] 'o que e o fator r?'                                           -> ok/A5 (esperado ok/A5)
+[OK] 'qual a diferenca entre MEI e microempresa?'                   -> ok/A7 (esperado ok/A7)
+[OK] 'como recuperar creditos de imposto?'                          -> ok/K1 (esperado ok/K1)
+[OK] 'empresa que compra de mim no Simples tem credito?'            -> ok/K2 (esperado ok/K2)
+[OK] 'vale a pena optar pelo regime regular de IBS e CBS?'          -> ok/K3 (esperado ok/K3)
+
+Acuracia: 34/34 = 100%
+Tempo medio: 2.15 ms | maximo: 3.59 ms
+Base: 37 registros, 6 temas, 89 arestas no grafo - integridade OK
+[OK] base ausente: Arquivo da base nao encontrado: /tmp/tmpk_jsdfzd/nao_existe.json
+[OK] base vazia: Base vazia: precisa ser uma lista com ao menos 1 registro.
+[OK] base sem_campo: Registro #1 (x) sem campo(s): fonte, relacionados
+[OK] base aresta_invalida: Registro x aponta para id inexistente: ZZ
+Modelo A: 26/26 respostas com fonte+data+aviso corretos; tamanho medio 519 caracteres
+Modelo B: 26/26 respostas com fonte+data+aviso corretos; tamanho medio 616 caracteres
