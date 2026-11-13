@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MEI sem Medo</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">Ir para o conteúdo</a>
+<header>
+  <h1>MEI sem Medo</h1>
+  <p class="sub">Orientações verificadas sobre reforma tributária, Simples, créditos e vendas. <strong>Não é canal oficial</strong> da Receita, do Sebrae ou do Procon. Não digite dados pessoais.</p>
+  <nav role="tablist" aria-label="Seções">
+    <button role="tab" data-tab="perguntar" aria-selected="true">Perguntar</button>
+    <button role="tab" data-tab="temas" aria-selected="false">Temas</button>
+    <button role="tab" data-tab="simples" aria-selected="false">Simples</button>
+    <button role="tab" data-tab="creditos" aria-selected="false">Créditos</button>
+    <button role="tab" data-tab="split" aria-selected="false">Split payment</button>
+  </nav>
+</header>
+<main id="main">
+
+<section id="tab-perguntar" role="tabpanel">
+  <form id="form-pergunta">
+    <label for="pergunta">Escreva sua dúvida</label>
+    <div class="linha"><input id="pergunta" autocomplete="off" maxlength="300" placeholder="Ex.: qual o limite de faturamento do MEI?"><button type="submit">Perguntar</button></div>
+  </form>
+  <div class="chips" id="exemplos" aria-label="Exemplos de perguntas"></div>
+  <div id="resposta" aria-live="polite"></div>
+</section>
+
+<section id="tab-temas" role="tabpanel" hidden>
+  <h2>Escolha um tema</h2>
+  <div id="lista-temas"></div>
+</section>
+
+<section id="tab-simples" role="tabpanel" hidden>
+  <h2>Categorias (anexos) do Simples Nacional</h2>
+  <p>Cada anexo corresponde a um tipo de atividade. Escolha o anexo para ver as faixas de receita e as alíquotas (LC 123/2006).</p>
+  <label for="anexo-ver">Anexo</label>
+  <select id="anexo-ver"></select>
+  <div class="tabela-wrap"><table id="tabela-anexo"></table></div>
+  <h3>Calculadora do DAS</h3>
+  <form id="form-das" class="grade">
+    <label>Anexo<select id="das-anexo"></select></label>
+    <label>Receita dos últimos 12 meses (RBT12), R$<input id="das-rbt" inputmode="decimal" value="300000"></label>
+    <label>Receita do mês, R$<input id="das-mes" inputmode="decimal" value="30000"></label>
+    <label>Folha de salários + pró-labore em 12 meses, R$ <small>(só para Fator R, Anexo V)</small><input id="das-folha" inputmode="decimal" value="0"></label>
+    <button type="submit">Calcular DAS</button>
+  </form>
+  <div id="res-das" aria-live="polite"></div>
+</section>
+
+<section id="tab-creditos" role="tabpanel" hidden>
+  <h2>Simulador de créditos de IBS/CBS</h2>
+  <p>Compara, <strong>só para IBS e CBS</strong>, continuar no Simples com pagar esses tributos pelo regime regular. É uma <strong>simulação didática</strong>: as alíquotas finais e as regras para o Simples ainda dependem de regulamentação. Os campos marcados com “estimativa” são editáveis.</p>
+  <form id="form-cred" class="grade">
+    <label>Vendas do mês para empresas (B2B), R$<input id="c-b2b" inputmode="decimal" value="20000"></label>
+    <label>Vendas do mês ao consumidor final, R$<input id="c-cons" inputmode="decimal" value="10000"></label>
+    <label>Compras do mês com crédito (de fornecedores do regime regular, sem imposto), R$<input id="c-compras" inputmode="decimal" value="8000"></label>
+    <label>DAS pago no mês, R$ <small>(use a calculadora da aba Simples)</small><input id="c-das" inputmode="decimal" value="2000"></label>
+    <label>Alíquota IBS+CBS, % <small>(estimativa)</small><input id="c-aliq" inputmode="decimal" value="26,5"></label>
+    <label>Parcela do DAS que corresponde a IBS/CBS, % <small>(estimativa)</small><input id="c-parcela" inputmode="decimal" value="15"></label>
+    <button type="submit">Simular</button>
+  </form>
+  <div id="res-cred" aria-live="polite"></div>
+</section>
+
+<section id="tab-split" role="tabpanel" hidden>
+  <h2>Como funciona o split payment</h2>
+  <p>É a divisão automática do pagamento: na hora em que o cliente paga, a parte do imposto (IBS e CBS) vai direto ao governo e o resto chega ao vendedor. Teste com uma venda:</p>
+  <form id="form-split" class="grade">
+    <label>Valor da venda, R$<input id="s-valor" inputmode="decimal" value="1000"></label>
+    <label>Parcela do imposto no preço, % <small>(exemplo)</small><input id="s-pct" inputmode="decimal" value="20"></label>
+  </form>
+  <div id="res-split" aria-live="polite"></div>
+  <ol class="passos">
+    <li>O cliente paga (Pix, cartão, boleto) o valor total.</li>
+    <li>O sistema de pagamento separa o IBS/CBS daquela venda.</li>
+    <li>O imposto segue ao governo; o restante cai na conta do vendedor.</li>
+  </ol>
+  <p class="aviso">Datas, modalidades e a aplicação ao MEI e ao Simples ainda dependem de regulamentação. Pergunte na aba “Perguntar”: <em>quando o split começa?</em></p>
+</section>
+
+</main>
+<footer>
+  <p>Base: <span id="n-reg"></span> registros com fonte e data de verificação. As regras da reforma mudam: confirme em canal oficial ou com um contador. Projeto acadêmico (FIAP Global Solution 2026.2).</p>
+</footer>
+<script src="base.js"></script>
+<script src="motor.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
