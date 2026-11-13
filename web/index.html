@@ -17,6 +17,7 @@
     <button role="tab" data-tab="mei" aria-selected="false">Meu MEI</button>
     <button role="tab" data-tab="temas" aria-selected="false">Temas</button>
     <button role="tab" data-tab="simples" aria-selected="false">Simples</button>
+    <button role="tab" data-tab="hibrido" aria-selected="false">Puro x Híbrido</button>
     <button role="tab" data-tab="creditos" aria-selected="false">Créditos</button>
     <button role="tab" data-tab="split" aria-selected="false">Split payment</button>
   </nav>
@@ -68,6 +69,72 @@
     <button type="submit">Calcular DAS</button>
   </form>
   <div id="res-das" aria-live="polite"></div>
+</section>
+
+<section id="tab-hibrido" role="tabpanel" hidden>
+  <h2>Simples puro x Simples híbrido</h2>
+  <p>No <strong>Simples puro</strong> tudo continua numa guia só, o DAS. No <strong>Simples híbrido</strong> (a partir de 2027), a CBS e o IBS saem do DAS e são pagos à parte: você paga o imposto sobre as vendas, desconta o crédito das compras, e o cliente empresa recebe crédito cheio.</p>
+  <p class="aviso">Simulação didática. As alíquotas de CBS e IBS são estimativas editáveis e as regras do híbrido para o Simples ainda dependem de regulamentação. Confirme com um contador.</p>
+
+  <div class="card">
+    <label for="h-sel">Histórico salvo <small>(uma empresa ou cenário por histórico)</small></label>
+    <select id="h-sel"></select>
+    <div class="acoes">
+      <button type="button" id="h-novo">Novo</button>
+      <button type="button" id="h-renomear">Renomear</button>
+      <button type="button" id="h-excluir">Excluir</button>
+      <button type="button" id="h-exportar">Exportar (.json)</button>
+      <button type="button" id="h-importar-btn">Importar</button>
+      <input type="file" id="h-importar" accept=".json,application/json" hidden>
+    </div>
+    <p class="fonte" id="h-status" aria-live="polite"></p>
+  </div>
+
+  <h3>Dados da empresa</h3>
+  <form id="form-empresa" class="grade">
+    <label>Anexo <small>(serviços: III ou V)</small><select id="h-anexo"></select></label>
+    <label>Folha + pró-labore em 12 meses, R$ <small>(só para Fator R, Anexo V)</small><input id="h-folha" inputmode="decimal"></label>
+    <label>Alíquota da CBS, % <small>(estimativa)</small><input id="h-cbs" inputmode="decimal"></label>
+    <label>Alíquota do IBS, % <small>(estimativa)</small><input id="h-ibs" inputmode="decimal"></label>
+    <label>Redução de alíquota do setor<select id="h-red"><option value="0">Nenhuma</option><option value="30">30% (ex.: profissões regulamentadas)</option><option value="60">60% (ex.: saúde, educação)</option></select></label>
+    <label>Vendas para empresas (B2B), % <small>(opcional)</small><input id="h-b2b" inputmode="decimal"></label>
+  </form>
+  <div id="h-empresa-erro" aria-live="polite"></div>
+  <p class="fonte">Esses dados ficam salvos no histórico escolhido e valem para a simulação de um mês e para a tabela mês a mês.</p>
+
+  <h3>Simular um mês</h3>
+  <form id="form-hib" class="grade">
+    <label>RBT12, R$ <small>(receita dos 12 meses anteriores)</small><input id="hs-rbt" inputmode="decimal" value="300000"></label>
+    <label>Receita do mês, R$<input id="hs-mes" inputmode="decimal" value="30000"></label>
+    <label>Compras do mês com crédito, R$ <small>(de fornecedores do regime regular, sem imposto)</small><input id="hs-compras" inputmode="decimal" value="8000"></label>
+    <label>Ano<select id="hs-ano"></select></label>
+    <button type="submit">Simular</button>
+  </form>
+  <p><button type="button" class="link" id="hs-usar" hidden></button></p>
+  <div id="hs-tabela"></div>
+  <div id="res-hib" aria-live="polite"></div>
+
+  <h3>Mês a mês: histórico do RBT12</h3>
+  <p>Registre o RBT12 real de hoje e vá acrescentando os meses seguintes (reais ou previsões). O RBT12 de cada mês é a soma da receita dos 12 meses anteriores, então ele anda sozinho conforme você preenche.</p>
+  <div id="h-inicio" class="card" hidden>
+    <h3>Ponto de partida: seu RBT12 real</h3>
+    <form id="form-inicio" class="grade">
+      <label>Mês do próximo DAS a calcular<input id="hi-mes" type="month" placeholder="AAAA-MM"></label>
+      <label>Como você quer informar?<select id="hi-modo"><option value="total">Só sei o RBT12 total</option><option value="meses">Vou digitar a receita de cada mês</option></select></label>
+      <label id="hi-rbt-wrap">RBT12 real, R$<input id="hi-rbt" inputmode="decimal" value="300000"></label>
+      <button type="submit">Criar histórico</button>
+    </form>
+    <p class="fonte">Só o total: os 12 meses anteriores entram com a média (RBT12 ÷ 12) e você pode trocar por valores reais depois. Mês a mês: a tabela abre com os 12 meses anteriores zerados para você preencher.</p>
+  </div>
+  <div id="h-erro" aria-live="polite"></div>
+  <div id="h-tabela" class="tabela-wrap"></div>
+  <div class="acoes" id="h-acoes" hidden>
+    <button type="button" id="h-add">+ Adicionar próximo mês</button>
+    <button type="button" id="h-rem">Remover último mês</button>
+    <button type="button" id="h-limpar">Recomeçar histórico</button>
+  </div>
+  <div id="h-resumo" aria-live="polite"></div>
+  <div id="h-detalhe" aria-live="polite"></div>
 </section>
 
 <section id="tab-creditos" role="tabpanel" hidden>
