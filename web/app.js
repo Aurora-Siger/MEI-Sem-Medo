@@ -70,6 +70,24 @@
     } catch (err) { erro($("res-das"), err); }
   });
 
+  // ----- MEI -----
+  $("form-mei").addEventListener("submit", (e) => {
+    e.preventDefault();
+    try {
+      const r = M.analisarMei($("m-ativ").value, num("m-meses"), num("m-fat"), num("m-rest"), num("m-media"), num("m-sm"));
+      const msg = { dentro: `<p>✅ Pela sua previsão você termina o ano <strong>dentro do limite</strong>. Para ficar seguro, não passe de <strong>${brl(r.maximo_por_mes_restante)} por mês</strong> nos meses que faltam.</p>`,
+        ate_20: `<p class="aviso">⚠ Você passaria do limite em <strong>${brl(r.excesso)}</strong> (${pct(r.excesso_pct)}). Até 20% de excesso, segue no MEI até dezembro, paga um DAS complementar (estimado em <strong>${brl(r.das_complementar_estimado)}</strong>) e vira microempresa no ano seguinte. Confirme o cálculo no Portal do Empreendedor.</p>`,
+        acima_20: `<p class="aviso">⛔ O excesso seria de <strong>${brl(r.excesso)}</strong> (${pct(r.excesso_pct)}), acima de 20%. Nesse caso o desenquadramento vale desde janeiro (ou desde a abertura) e os impostos de microempresa são cobrados retroativamente. Converse com um contador antes de chegar lá.</p>` }[r.status];
+      $("res-mei").innerHTML = `<div class="card"><div class="num">${brl(r.das_mensal)}<small> de DAS por mês</small></div>
+        <p>Limite deste ano: <strong>${brl(r.limite_ano)}</strong> · usado até agora: <strong>${pct(r.uso_pct)}</strong></p>
+        <div class="uso ${r.status}" role="img" aria-label="${pct(Math.min(r.uso_pct, 1))} do limite usado"><div style="width:${Math.min(r.uso_pct, 1) * 100}%"></div></div>
+        <p>Projeção do ano: <strong>${brl(r.projecao)}</strong></p>${msg}</div>
+        <div class="card"><h3>E se eu virar microempresa?</h3>
+        <p>MEI: ${brl(r.custo_anual_mei)} de DAS por ano. Microempresa no Simples (Anexo ${M.ATIV_MEI[$("m-ativ").value][2]}), com essa receita: ${r.custo_anual_microempresa == null ? "fora do limite do Simples" : `cerca de <strong>${brl(r.custo_anual_microempresa)}</strong> por ano`}.</p>
+        <p class="fonte">Estimativa só do DAS, sem contador, pró-labore ou outros custos. Caminhoneiro MEI tem outra regra de INSS (12%), não coberta aqui.</p></div>`;
+    } catch (err) { erro($("res-mei"), err); }
+  });
+
   // ----- créditos -----
   $("form-cred").addEventListener("submit", (e) => {
     e.preventDefault();

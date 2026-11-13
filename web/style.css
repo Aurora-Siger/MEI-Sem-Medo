@@ -39,3 +39,4 @@ summary{cursor:pointer;font-weight:600}
 footer{color:var(--mut);font-size:.88rem;padding-bottom:40px;margin-top:30px}
 .erro{background:var(--warnbg);color:var(--warn);padding:10px 12px;border-radius:8px}
 @media (max-width:480px){body{font-size:16px}.linha{flex-direction:column}}
+.uso{height:18px;background:var(--bd);border-radius:9px;overflow:hidden;margin:8px 0}.uso div{height:100%;background:var(--ac)}.uso.ate_20 div,.uso.acima_20 div{background:var(--warn)}

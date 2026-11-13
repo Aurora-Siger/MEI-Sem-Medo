@@ -114,6 +114,11 @@ def main():
     import tempfile
     with tempfile.TemporaryDirectory() as d:
         vok, vn = testar_validacao(Path(d))
+    import calculadora
+    assert [calculadora.das_mei(a) for a in ("comercio", "servicos", "ambos")] == [82.05, 86.05, 87.05], "DAS-MEI diverge do registro M2"
+    assert calculadora.analisar_mei("servicos", 12, 60000, 6, 6000)["status"] == "ate_20"
+    assert calculadora.analisar_mei("servicos", 12, 70000, 6, 9000)["status"] == "acima_20"
+    print("Calculadora MEI: DAS por atividade e faixas de excesso OK")
     cmp = comparar_modelos(base)
     for m, (tam, comp, nn) in cmp.items():
         print(f"Modelo {m}: {comp}/{nn} respostas com fonte+data+aviso corretos; tamanho medio {tam:.0f} caracteres")
