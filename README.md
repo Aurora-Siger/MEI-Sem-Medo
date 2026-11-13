@@ -38,7 +38,26 @@ Log completo: `docs/resultados_testes.txt`. Facilidade de uso: roteiro em `docs/
 
 **Site online (GitHub Pages):** o workflow `.github/workflows/pages.yml` roda os testes e publica a pasta `web/`. Ative uma vez em *Settings → Pages → Source: GitHub Actions*; o endereço será `https://aurora-siger.github.io/MEI-Sem-Medo/`.
 
-## 6. Como executar
+## 6. Agente de IA (Claude com ferramentas)
+Além da busca por palavras-chave, o projeto tem um **agente de IA de verdade** (`src/agente.py`): o modelo decide, a cada pergunta, quais ferramentas chamar em até 6 passos: `buscar_base`, `obter_registro`, `listar_temas`, `calcular_das`, `analisar_mei` e `simular_creditos`. Ele pede os dados que faltam antes de calcular e lembra o contexto da conversa (8 turnos).
+**Proteções aplicadas em código, não só no prompt:**
+- só há resposta se ela citar um registro **realmente recuperado** da base ou usar uma calculadora; caso contrário vira “não sei, confirme em…”;
+- citações inventadas são removidas, e a lista de fontes (nome, link, data) vem da base, nunca do modelo;
+- avisos automáticos para registros `confirmar` e para valores calculados (estimativas);
+- CPF, CNPJ, e-mail e telefone são removidos antes de ir para a API;
+- falha de rede, chave ou recusa de segurança não derrubam o app: o site volta para a busca na base.
+Limitação: o código verifica que há fonte e que o id existe, mas não checa cada número do texto contra o registro; por isso o prompt exige citar e as respostas são curtas.
+**Como usar:**
+```
+pip install -r requirements.txt
+export ANTHROPIC_API_KEY=sua-chave        # Windows PowerShell: $env:ANTHROPIC_API_KEY="sua-chave"
+python src/servidor.py                    # abre http://127.0.0.1:8000 com o agente ativo
+python src/agente.py                      # ou o agente no terminal
+```
+O modelo padrão é `claude-opus-5-5` (troque com `MEI_MODELO=claude-sonnet-5-5` para gastar menos). A chave fica só no servidor e o navegador nunca a vê; o servidor limita 20 perguntas por minuto por IP e aceita só a própria origem. **Sem chave, tudo continua funcionando no modo base verificada.** O site publicado no GitHub Pages é estático e usa esse modo; o agente precisa do servidor. Para uso público, coloque o servidor atrás de autenticação e defina um limite de gasto na conta da API.
+Testes (sem gastar API, com cliente simulado): `python tests/test_agente.py` e `python tests/test_servidor.py`.
+
+## 7. Como executar
 ```
 python src/sistema.py              # requer só Python 3.8+
 python src/sistema.py --modelo B
@@ -48,21 +67,21 @@ python src/calculadora.py        # calculadoras no terminal
 ```
 Comandos: `menu` (tema → assunto), `topicos`, `sair`, ou escreva a pergunta.
 
-## 7. Exemplos
+## 8. Exemplos
 - "Qual o limite de faturamento do MEI?" → resposta M1 + fonte + data.
 - "o cliente comprou na internet e quer devolver, pode?" → C3 (arrependimento de 7 dias) + fonte.
 - "" → pede para digitar; "?!?! 123" → pede uma pergunta com palavras; "nota fiscal" → pergunta qual assunto; "como tirar passaporte?" → "não sei", indica onde confirmar.
 
-## 8. Clareza, acessibilidade, privacidade e informação não oficial
+## 9. Clareza, acessibilidade, privacidade e informação não oficial
 Linguagem simples, mensagens curtas, interface textual compatível com leitor de tela, menu numerado. Não pede nem guarda dados pessoais (aviso ao iniciar). **Não é canal oficial** de Receita, Sebrae ou Procon e não substitui contador; as fontes são Sebrae, Idec e imprensa especializada, não os textos legais.
 
-## 9. Conclusões
+## 10. Conclusões
 Protótipo funcional que responde com fonte, admite limites e navega entre temas. Limitações: busca por palavras exatas, base pequena, regras ainda em mudança (CBS, nota fiscal em 2027, Simples Híbrido; registros R4, R5, R7, R8, M6, S2, S3, S4, A6, K2, K3 e K5 marcados `confirmar`).
 
 ## Estrutura
 ```
-src/sistema.py  src/calculadora.py  data/base.json
+src/sistema.py  src/calculadora.py  src/agente.py  src/servidor.py  data/base.json
 web/ (index.html, app.js, motor.js, style.css, base.js)  scripts/gerar_web.py
-tests/testes.py  tests/paridade.py
+tests/testes.py  tests/paridade.py  tests/test_agente.py  tests/test_servidor.py
 docs/uso_ia.md  docs/usabilidade.md  docs/resultados_testes.txt
 ```

@@ -21,6 +21,8 @@ jobs:
         with: { node-version: "22" }
       - run: python tests/testes.py
       - run: python tests/paridade.py
+      - run: python tests/test_agente.py
+      - run: python tests/test_servidor.py
   publicar:
     needs: testar
     runs-on: ubuntu-latest
