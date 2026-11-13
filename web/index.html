@@ -25,10 +25,11 @@
 <section id="tab-perguntar" role="tabpanel">
   <form id="form-pergunta">
     <label for="pergunta">Escreva sua dúvida</label>
-    <div class="linha"><input id="pergunta" autocomplete="off" maxlength="300" placeholder="Ex.: qual o limite de faturamento do MEI?"><button type="submit">Perguntar</button></div>
+    <div class="linha"><input id="pergunta" autocomplete="off" maxlength="300" placeholder="Ex.: qual o limite de faturamento do MEI?"><button type="submit">Enviar</button></div>
+    <button type="button" id="limpar" class="link">Limpar conversa</button>
   </form>
   <div class="chips" id="exemplos" aria-label="Exemplos de perguntas"></div>
-  <div id="resposta" aria-live="polite"></div>
+  <div id="resposta" role="log" aria-live="polite" aria-label="Conversa com o assistente"></div>
 </section>
 
 <section id="tab-mei" role="tabpanel" hidden>

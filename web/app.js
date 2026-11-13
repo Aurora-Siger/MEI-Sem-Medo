@@ -15,7 +15,13 @@
   const abrirAba = (t) => document.querySelector(`nav button[data-tab=${t}]`).click();
 
   // ----- perguntar -----
+  const FERRAMENTA = { A3: ["simples", "Abrir calculadora do DAS"], A4: ["simples", "Abrir calculadora do DAS"], A5: ["simples", "Abrir calculadora do DAS"], A2: ["simples", "Ver tabela dos anexos"],
+    K1: ["creditos", "Abrir simulador de créditos"], K2: ["creditos", "Abrir simulador de créditos"], K3: ["creditos", "Abrir simulador de créditos"], K5: ["creditos", "Abrir simulador de créditos"],
+    M1: ["mei", "Calcular meu limite e DAS"], M2: ["mei", "Calcular meu limite e DAS"], M6: ["mei", "Calcular meu limite e DAS"], A7: ["mei", "Calcular meu limite e DAS"],
+    S1: ["split", "Ver o split payment na prática"], S2: ["split", "Ver o split payment na prática"] };
   function cartao(r, extra = "") {
+    const f = FERRAMENTA[r.id];
+    if (f) extra += `<p><button type="button" class="ferr" data-aba="${f[0]}">${f[1]} →</button></p>`;
     const rel = M.relacionados(BASE, r);
     const aviso = r.confianca === "confirmar" ? `<p class="aviso">⚠ Esta informação pode mudar ou as fontes divergem: confirme em canal oficial.</p>` : "";
     return `<article class="card"><h3>${esc(r.titulo)}</h3>
@@ -24,25 +30,28 @@
       <p class="fonte">Fonte: <a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.fonte)}</a> · verificado em ${esc(r.verificado)}</p>
       ${rel.length ? `<div class="rel"><span>Veja também</span>${rel.map((x) => `<button type="button" data-id="${x.id}">${esc(x.titulo)}</button>`).join("")}</div>` : ""}${extra}</article>`;
   }
-  function mostrarRegistro(id) {
-    abrirAba("perguntar");
-    $("resposta").innerHTML = cartao(BASE.find((r) => r.id === id));
-    ligarRel();
-    $("resposta").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  const log = $("resposta");
+  function msg(cls, html) {
+    const d = document.createElement("div"); d.className = "msg " + cls; d.innerHTML = html; log.appendChild(d);
+    d.querySelectorAll("[data-id]").forEach((b) => (b.onclick = () => { msg("eu", esc(b.textContent)); msg("bot", cartao(BASE.find((r) => r.id === b.dataset.id))); }));
+    d.querySelectorAll("[data-aba]").forEach((b) => (b.onclick = () => abrirAba(b.dataset.aba)));
+    d.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
-  function ligarRel() { document.querySelectorAll("#resposta [data-id]").forEach((b) => (b.onclick = () => mostrarRegistro(b.dataset.id))); }
+  function mostrarRegistro(id) { abrirAba("perguntar"); const r = BASE.find((x) => x.id === id); msg("eu", esc(r.titulo)); msg("bot", cartao(r)); }
   function responder(q) {
     const res = M.perguntar(BASE, q);
-    const out = $("resposta");
-    if (res.status === "ok") { out.innerHTML = cartao(res.registro); ligarRel(); return; }
+    msg("eu", esc(q.trim() || "(mensagem vazia)"));
+    if (res.status === "ok") return msg("bot", cartao(res.registro));
     let h = `<div class="card"><p>${esc(res.texto)}</p>`;
     if (res.status === "ambigua") h += `<div class="opcoes">${res.opcoes.map((r) => `<button type="button" data-id="${r.id}">${esc(r.titulo)}</button>`).join("")}</div>`;
-    if (res.status === "desconhecida") h += `<p>Temas que eu cubro: ${Object.values(M.TEMAS).map(esc).join(", ")}. Veja a aba “Temas”.</p>`;
-    out.innerHTML = h + "</div>"; ligarRel();
+    if (res.status === "desconhecida") h += `<p>Temas que eu cubro: ${Object.values(M.TEMAS).map(esc).join(", ")}. Veja a aba “Temas” ou use as calculadoras.</p>`;
+    msg("bot", h + "</div>");
   }
-  $("form-pergunta").addEventListener("submit", (e) => { e.preventDefault(); responder($("pergunta").value); });
+  msg("bot", `<div class="card"><p>Oi! Sou o assistente do MEI sem Medo. Respondo só com base em fontes verificadas e digo quando não sei. Pergunte sobre MEI, Simples, reforma tributária, split payment, créditos ou vendas. Em várias respostas eu abro a calculadora certa para você.</p></div>`);
+  $("form-pergunta").addEventListener("submit", (e) => { e.preventDefault(); responder($("pergunta").value); $("pergunta").value = ""; $("pergunta").focus(); });
+  $("limpar").onclick = () => { log.innerHTML = ""; };
   ["Qual o limite de faturamento do MEI?", "O que é split payment?", "Qual anexo do Simples eu me encaixo?", "Como recuperar créditos de imposto?", "O cliente pode devolver compra online?"]
-    .forEach((q) => { const b = document.createElement("button"); b.type = "button"; b.textContent = q; b.onclick = () => { $("pergunta").value = q; responder(q); }; $("exemplos").appendChild(b); });
+    .forEach((q) => { const b = document.createElement("button"); b.type = "button"; b.textContent = q; b.onclick = () => responder(q); $("exemplos").appendChild(b); });
 
   // ----- temas -----
   $("lista-temas").innerHTML = Object.keys(M.TEMAS).filter((t) => BASE.some((r) => r.tema === t)).map((t) =>
