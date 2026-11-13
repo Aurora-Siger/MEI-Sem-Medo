@@ -30,11 +30,13 @@ Log completo: `docs/resultados_testes.txt`. Facilidade de uso: roteiro em `docs/
 **Melhorias:** (1) tolerância a erros de digitação e sinônimos (distância de edição); (2) coletar perguntas reais caídas em "não sei" para ampliar a base; (3) revisão periódica dos registros `confirmar`.
 
 ## 5. Frontend e calculadoras
-- **Frontend web** (`web/index.html`, sem instalação: abra o arquivo no navegador). Abas: Perguntar, Meu MEI, Temas, Simples, Créditos e Split payment. Layout para celular, modo escuro, teclado e leitor de tela. O motor de busca em `web/motor.js` é uma porta do `sistema.py`; `python scripts/gerar_web.py` atualiza `web/base.js` depois de editar a base.
+- **Frontend web** (`web/index.html`, sem instalação: abra o arquivo no navegador). A aba Perguntar é um **chat com o assistente**: mostra a resposta com fonte, opções de “Veja também” e um botão que abre a calculadora certa (DAS, créditos, limite do MEI ou split). Abas: Perguntar, Meu MEI, Temas, Simples, Créditos e Split payment. Layout para celular, modo escuro, teclado e leitor de tela. O motor de busca em `web/motor.js` é uma porta do `sistema.py`; `python scripts/gerar_web.py` atualiza `web/base.js` depois de editar a base.
 - **Meu MEI:** calcula o DAS-MEI por atividade (5% do salário mínimo + R$ 1 de ICMS e/ou R$ 5 de ISS), o limite proporcional de R$ 81 mil, quanto ainda pode faturar por mês, o que acontece se estourar (até 20% ou acima) e uma estimativa do custo de virar microempresa. Também em `python src/calculadora.py` (opção 3).
 - **Simples:** tabela dos 5 anexos (LC 123/2006) e calculadora do DAS com alíquota efetiva e Fator R (`src/calculadora.py`, também no site).
 - **Simulador de créditos IBS/CBS:** compara ficar no Simples com pagar IBS/CBS pelo regime regular, mostrando o crédito que o cliente B2B deixa de receber e o crédito das compras não aproveitado. **É uma simulação didática**: alíquota e parcela do DAS são estimativas editáveis, e a regulamentação para o Simples ainda não está definida.
 - **Split payment:** explicador interativo (valor da venda → parte do imposto → valor que chega ao vendedor) e 4 registros na base (conceito, caixa, modalidades, início).
+
+**Site online (GitHub Pages):** o workflow `.github/workflows/pages.yml` roda os testes e publica a pasta `web/`. Ative uma vez em *Settings → Pages → Source: GitHub Actions*; o endereço será `https://aurora-siger.github.io/MEI-Sem-Medo/`.
 
 ## 6. Como executar
 ```
