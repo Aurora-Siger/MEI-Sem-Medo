@@ -81,6 +81,99 @@
       credito_perdido_pelo_cliente: r2(regular.credito_para_cliente_b2b - simples.credito_para_cliente_b2b), credito_compras_nao_aproveitado: creditoCompras };
   }
 
+  // ---- Simples puro x Simples híbrido (porta de simular_puro_hibrido e projetar_historico) ----
+  // Repartição do DAS (LC 123/2006) por faixa: [Cofins, PIS, ICMS ou ISS] em % do DAS.
+  const REPARTICAO = {
+    I: [[12.74, 2.76, 34.0], [12.74, 2.76, 34.0], [12.74, 2.76, 33.5], [12.74, 2.76, 33.5], [12.74, 2.76, 33.5], [28.27, 6.13, 0.0]],
+    II: [[11.51, 2.49, 32.0], [11.51, 2.49, 32.0], [11.51, 2.49, 32.0], [11.51, 2.49, 32.0], [11.51, 2.49, 32.0], [20.96, 4.54, 0.0]],
+    III: [[12.82, 2.78, 33.5], [14.05, 3.05, 32.0], [13.64, 2.96, 32.5], [13.64, 2.96, 32.5], [12.82, 2.78, 33.5], [16.03, 3.47, 0.0]],
+    IV: [[17.67, 3.83, 44.5], [20.55, 4.45, 40.0], [19.73, 4.27, 40.0], [18.90, 4.10, 40.0], [18.08, 3.92, 40.0], [20.55, 4.45, 0.0]],
+    V: [[14.10, 3.05, 14.0], [14.10, 3.05, 17.0], [14.92, 3.23, 19.0], [15.74, 3.41, 21.0], [14.10, 3.05, 23.5], [16.44, 3.56, 0.0]],
+  };
+  const CONFIG_PADRAO = { anexo: "III", folha12: 0, aliq_cbs: 8.8, aliq_ibs: 17.7, reducao_setor: 0, pct_b2b: 0 };
+  function regrasAno(ano) {
+    if (ano < 2027) return null;
+    if (ano <= 2028) return { reducao_cbs: 0.1, ibs_fixo: 0.1, fracao_ibs: 0 };
+    if (ano <= 2032) return { reducao_cbs: 0, ibs_fixo: null, fracao_ibs: (ano - 2028) / 10 };
+    return { reducao_cbs: 0, ibs_fixo: null, fracao_ibs: 1 };
+  }
+  function parcelasDoDas(anexo, faixa, ef) {
+    const [cofins, pis, icmsIss] = REPARTICAO[anexo][faixa - 1];
+    let pCbs = (cofins + pis) / 100, pIbs = icmsIss / 100;
+    if (["III", "IV", "V"].includes(anexo) && ef * pIbs > 0.05) { const novo = 0.05 / ef; pCbs = pCbs * (1 - novo) / (1 - pIbs); pIbs = novo; }
+    return [pCbs, pIbs];
+  }
+  function simularPuroHibrido(anexo, rbt12, receitaMes, ano, compras = 0, aliqCbs = 8.8, aliqIbs = 17.7, reducao = 0, pctB2b = 0, folha12 = 0, saldoCredor = 0) {
+    for (const [n, v] of [["A receita do mês", receitaMes], ["As compras com crédito", compras], ["A folha de salários", folha12], ["O saldo credor", saldoCredor]])
+      if (!(v >= 0)) throw new Error(`${n} não pode ser negativa.`);
+    for (const [n, v] of [["A alíquota da CBS", aliqCbs], ["A alíquota do IBS", aliqIbs], ["A redução do setor", reducao], ["O percentual de vendas B2B", pctB2b]])
+      if (!(v >= 0 && v <= 100)) throw new Error(`${n} deve estar entre 0 e 100%.`);
+    const base = calcularDas(anexo, rbt12, receitaMes, folha12), das = base.das;
+    const [pCbs, pIbs] = parcelasDoDas(base.anexo, base.faixa, base.aliquota_efetiva);
+    ano = Math.trunc(ano);
+    const regra = regrasAno(ano), b2b = pctB2b / 100;
+    const res = { ...base, ano, rbt12, parcela_pis_cofins: pCbs, parcela_icms_iss: pIbs, regra };
+    if (!regra) return { ...res, puro: { das, cbs_no_das: 0, ibs_no_das: 0, credito_cliente_b2b: 0, total: das }, hibrido: null, diferenca: null };
+    const cbsNoDas = r2(das * pCbs), ibsNoDas = r2(das * pIbs * regra.fracao_ibs);
+    const puro = { das, cbs_no_das: cbsNoDas, ibs_no_das: ibsNoDas, credito_cliente_b2b: r2((cbsNoDas + ibsNoDas) * b2b), total: das };
+    const cbsCheia = Math.max(0, aliqCbs - regra.reducao_cbs), ibsCheia = regra.ibs_fixo != null ? regra.ibs_fixo : aliqIbs * regra.fracao_ibs;
+    const fator = 1 - reducao / 100;
+    const cbsVenda = r2(receitaMes * cbsCheia * fator / 100), ibsVenda = r2(receitaMes * ibsCheia * fator / 100);
+    const debito = r2(cbsVenda + ibsVenda), credito = r2(compras * (cbsCheia + ibsCheia) / 100), disponivel = r2(credito + saldoCredor);
+    const dasH = r2(das - cbsNoDas - ibsNoDas), aPagar = r2(Math.max(0, debito - disponivel));
+    const hibrido = { das: dasH, aliq_cbs: cbsCheia * fator, aliq_ibs: ibsCheia * fator, cbs_vendas: cbsVenda, ibs_vendas: ibsVenda, debito,
+      credito_compras: credito, saldo_credor_anterior: r2(saldoCredor), ibs_cbs_a_pagar: aPagar, saldo_credor_final: r2(Math.max(0, disponivel - debito)),
+      credito_cliente_b2b: r2(receitaMes * b2b * (cbsCheia + ibsCheia) * fator / 100), total: r2(dasH + aPagar) };
+    return { ...res, puro, hibrido, diferenca: r2(hibrido.total - puro.total) };
+  }
+  function mesIdx(mes) {
+    const m = /^(\d{4})-(\d{1,2})$/.exec(String(mes)), erro = `Mês inválido: '${mes}'. Use o formato AAAA-MM, por exemplo 2026-11.`;
+    if (!m) throw new Error(erro);
+    const ano = +m[1], mm = +m[2];
+    if (!(ano >= 2000 && ano <= 2100 && mm >= 1 && mm <= 12)) throw new Error(erro);
+    return ano * 12 + mm - 1;
+  }
+  const idxMes = (i) => `${String(Math.floor(i / 12)).padStart(4, "0")}-${String((i % 12) + 1).padStart(2, "0")}`;
+  const somarMeses = (mes, n) => idxMes(mesIdx(mes) + n);
+  function mesesBaseRbt12(mesRef, rbt12) {
+    if (!(rbt12 > 0)) throw new Error("Informe um RBT12 maior que zero.");
+    const media = r2(rbt12 / 12);
+    const meses = Array.from({ length: 12 }, (_, k) => ({ mes: somarMeses(mesRef, k - 12), receita: media, compras: 0, tipo: "media" }));
+    meses[11].receita = r2(rbt12 - media * 11);
+    return meses;
+  }
+  function projetarHistorico(meses, config) {
+    const cfg = { ...CONFIG_PADRAO, ...(config || {}) }, porIdx = new Map();
+    for (const m of meses) {
+      const i = mesIdx(m.mes);
+      if (porIdx.has(i)) throw new Error(`Mês repetido no histórico: ${m.mes}.`);
+      const receita = Number(m.receita) || 0, compras = Number(m.compras) || 0;
+      if (receita < 0 || compras < 0) throw new Error(`Valores negativos em ${m.mes}.`);
+      porIdx.set(i, { mes: idxMes(i), tipo: m.tipo || "real", receita, compras });
+    }
+    const idx = [...porIdx.keys()].sort((a, b) => a - b), inicio = idx.length ? idx[0] : 0, linhas = [];
+    let saldo = 0;
+    for (const i of idx) {
+      const m = porIdx.get(i), linha = { ...m, rbt12: null, situacao: "ok", erro: null, resultado: null };
+      const janela = Array.from({ length: 12 }, (_, k) => porIdx.get(i - 12 + k));
+      if (janela.some((x) => !x)) {
+        linha.situacao = i - 12 < inicio ? "base" : "lacuna";
+        if (linha.situacao === "lacuna") linha.erro = "Faltam meses anteriores no histórico para fechar o RBT12.";
+        linhas.push(linha); continue;
+      }
+      let soma = 0;
+      for (const x of janela) soma += x.receita;
+      linha.rbt12 = r2(soma);
+      try {
+        const r = simularPuroHibrido(cfg.anexo, linha.rbt12, m.receita, Math.floor(i / 12), m.compras, cfg.aliq_cbs, cfg.aliq_ibs, cfg.reducao_setor, cfg.pct_b2b, cfg.folha12, saldo);
+        if (r.hibrido) saldo = r.hibrido.saldo_credor_final;
+        linha.resultado = r;
+      } catch (e) { linha.situacao = "erro"; linha.erro = e.message; }
+      linhas.push(linha);
+    }
+    return linhas;
+  }
+
   const ATIV_MEI = { comercio: ["Comércio / indústria", 1, "I"], servicos: ["Serviços", 5, "III"], ambos: ["Comércio e serviços", 6, "III"] };
   function dasMei(atividade, sm = 1621) {
     if (!ATIV_MEI[atividade]) throw new Error("Atividade deve ser comércio, serviços ou ambos.");
@@ -101,6 +194,7 @@
       custo_anual_mei: r2(das * 12), custo_anual_microempresa: me };
   }
 
-  const api = { ATIV_MEI, dasMei, analisarMei, norm, tokens, busca, perguntar, relacionados, TEMAS, ANEXOS, aliquotaEfetiva, calcularDas, simularCreditos };
+  const api = { ATIV_MEI, dasMei, analisarMei, norm, tokens, busca, perguntar, relacionados, TEMAS, ANEXOS, aliquotaEfetiva, calcularDas, simularCreditos,
+    REPARTICAO, CONFIG_PADRAO, regrasAno, parcelasDoDas, simularPuroHibrido, mesIdx, somarMeses, mesesBaseRbt12, projetarHistorico };
   if (typeof module !== "undefined") module.exports = api; else root.Motor = api;
 })(typeof window !== "undefined" ? window : globalThis);

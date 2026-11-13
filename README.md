@@ -24,15 +24,21 @@ Condicionais tratam: vazia, inválida (sem letras, muito curta ou longa), ambíg
 | Taxa de acerto | 34/34 = **100%** |
 | Tempo médio de consulta | ~1 ms (máx. ~1,5 ms) |
 | Validação da base | 4/4 falhas simuladas tratadas |
-| Paridade frontend x Python | 34 perguntas + DAS + créditos + MEI idênticos (`python tests/paridade.py`) |
+| Paridade frontend x Python | 34 perguntas + DAS + créditos + MEI + 7 cenários puro x híbrido + histórico de 42 meses idênticos (`python tests/paridade.py`) |
 Log completo: `docs/resultados_testes.txt`. Facilidade de uso: roteiro em `docs/usabilidade.md` (**ainda precisa ser aplicado com pessoas reais**).
 **Interpretação e limites:** 100% reflete um conjunto pequeno escrito pelo próprio grupo, com vocabulário próximo ao da base; não prova o desempenho com usuários reais (ampliar os testes revelou falhas de sinônimos e colisões de palavras-chave (por exemplo, “receita” casando com receita de bolo), já corrigidas). O tempo mede só a busca local.
 **Melhorias:** (1) tolerância a erros de digitação e sinônimos (distância de edição); (2) coletar perguntas reais caídas em "não sei" para ampliar a base; (3) revisão periódica dos registros `confirmar`.
 
 ## 5. Frontend e calculadoras
-- **Frontend web** (`web/index.html`, sem instalação: abra o arquivo no navegador). A aba Perguntar é um **chat com o assistente**: mostra a resposta com fonte, opções de “Veja também” e um botão que abre a calculadora certa (DAS, créditos, limite do MEI ou split). Abas: Perguntar, Meu MEI, Temas, Simples, Créditos e Split payment. Layout para celular, modo escuro, teclado e leitor de tela. O motor de busca em `web/motor.js` é uma porta do `sistema.py`; `python scripts/gerar_web.py` atualiza `web/base.js` depois de editar a base.
+- **Frontend web** (`web/index.html`, sem instalação: abra o arquivo no navegador). A aba Perguntar é um **chat com o assistente**: mostra a resposta com fonte, opções de “Veja também” e um botão que abre a calculadora certa (DAS, créditos, limite do MEI ou split). Abas: Perguntar, Meu MEI, Temas, Simples, Puro x Híbrido, Créditos e Split payment. Layout para celular, modo escuro, teclado e leitor de tela. O motor de busca em `web/motor.js` é uma porta do `sistema.py`; `python scripts/gerar_web.py` atualiza `web/base.js` depois de editar a base.
 - **Meu MEI:** calcula o DAS-MEI por atividade (5% do salário mínimo + R$ 1 de ICMS e/ou R$ 5 de ISS), o limite proporcional de R$ 81 mil, quanto ainda pode faturar por mês, o que acontece se estourar (até 20% ou acima) e uma estimativa do custo de virar microempresa. Também em `python src/calculadora.py` (opção 3).
 - **Simples:** tabela dos 5 anexos (LC 123/2006) e calculadora do DAS com alíquota efetiva e Fator R (`src/calculadora.py`, também no site).
+- **Puro x Híbrido:** quanto a empresa paga por mês no **Simples puro** (tudo no DAS) e no **Simples híbrido** (CBS e IBS fora do DAS, com débito sobre as vendas menos crédito das compras), de 2027 a 2033.
+  - A parte do DAS que vira CBS (PIS+Cofins) e IBS (ICMS/ISS) sai da **tabela de repartição da LC 123** por anexo e faixa, com o teto de 5% de ISS. Não é um percentual chutado.
+  - A transição segue a EC 132 e a LC 214. Em 2027–2028 entram a CBS cheia e o IBS de teste de 0,1%. De 2029 a 2032 o ICMS/ISS vira IBS em 10% ao ano, e em 2033 vale a regra final.
+  - Campos: anexo (III ou V; a tabela do anexo mostra faixas de RBT12, alíquota nominal e valor a deduzir, destaca a faixa do RBT12 digitado e passa para o Anexo III quando o Fator R é de 28% ou mais), folha (Fator R), alíquotas de CBS e IBS (estimativas editáveis), redução do setor (0, 30 ou 60%), % de vendas B2B, compras com crédito, RBT12, receita e ano.
+  - **Histórico mês a mês do RBT12:** você registra o RBT12 real atual (os 12 meses um a um ou só o total, que é dividido pela média) e acrescenta meses reais ou de previsão. O RBT12 de cada mês é a soma dos 12 meses anteriores, então anda sozinho. O crédito que sobra no híbrido passa para o mês seguinte.
+  - O site guarda vários históricos (por empresa ou cenário) **no próprio navegador** (localStorage), com exportar e importar em JSON. `python src/calculadora.py` (opções 4 e 5) faz a mesma conta e lê o JSON exportado.
 - **Simulador de créditos IBS/CBS:** compara ficar no Simples com pagar IBS/CBS pelo regime regular, mostrando o crédito que o cliente B2B deixa de receber e o crédito das compras não aproveitado. **É uma simulação didática**: alíquota e parcela do DAS são estimativas editáveis, e a regulamentação para o Simples ainda não está definida.
 - **Split payment:** explicador interativo (valor da venda → parte do imposto → valor que chega ao vendedor) e 4 registros na base (conceito, caixa, modalidades, início).
 
@@ -73,10 +79,10 @@ Comandos: `menu` (tema → assunto), `topicos`, `sair`, ou escreva a pergunta.
 - "" → pede para digitar; "?!?! 123" → pede uma pergunta com palavras; "nota fiscal" → pergunta qual assunto; "como tirar passaporte?" → "não sei", indica onde confirmar.
 
 ## 9. Clareza, acessibilidade, privacidade e informação não oficial
-Linguagem simples, mensagens curtas, interface textual compatível com leitor de tela, menu numerado. Não pede nem guarda dados pessoais (aviso ao iniciar). **Não é canal oficial** de Receita, Sebrae ou Procon e não substitui contador; as fontes são Sebrae, Idec e imprensa especializada, não os textos legais.
+Linguagem simples, mensagens curtas, interface textual compatível com leitor de tela, menu numerado. Não pede nem guarda dados pessoais (aviso ao iniciar). O histórico de receitas da aba Puro x Híbrido fica salvo só no navegador de quem usa (localStorage) e nunca é enviado a servidor. Apagar os dados do site ou usar janela anônima o perde, então o botão Exportar serve de cópia de segurança. **Não é canal oficial** de Receita, Sebrae ou Procon e não substitui contador; as fontes são Sebrae, Idec e imprensa especializada, não os textos legais.
 
 ## 10. Conclusões
-Protótipo funcional que responde com fonte, admite limites e navega entre temas. Limitações: busca por palavras exatas, base pequena, regras ainda em mudança (CBS, nota fiscal em 2027, Simples Híbrido; registros R4, R5, R7, R8, M6, S2, S3, S4, A6, K2, K3 e K5 marcados `confirmar`).
+Protótipo funcional que responde com fonte, admite limites e navega entre temas. Limitações: busca por palavras exatas, base pequena, regras ainda em mudança (CBS, nota fiscal em 2027, Simples Híbrido; registros R4, R5, R7, R8, M6, S2, S3, S4, A6, K2, K3 e K5 marcados `confirmar`). O simulador puro x híbrido supõe que as tabelas do Simples continuam iguais e aplica a mesma alíquota a todas as vendas. Ele também deixa o IPI do Anexo II dentro do DAS e não trata o sublimite de R$ 3,6 milhões nem empresa com menos de 12 meses de atividade.
 
 ## Estrutura
 ```
