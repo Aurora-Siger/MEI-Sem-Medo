@@ -86,6 +86,48 @@ def simular_creditos(vendas_b2b, vendas_consumidor, compras_com_credito, aliquot
             "credito_compras_nao_aproveitado": credito_compras}
 
 
+LIMITE_MEI = 81000.0
+ATIVIDADES_MEI = {"comercio": ("Comércio / indústria", 1.0, "I"), "servicos": ("Serviços", 5.0, "III"), "ambos": ("Comércio e serviços", 6.0, "III")}
+
+
+def das_mei(atividade, salario_minimo=1621.0):
+    """DAS-MEI mensal: 5% do salario minimo (INSS) + R$ 1 de ICMS e/ou R$ 5 de ISS."""
+    if atividade not in ATIVIDADES_MEI:
+        raise ValueError("Atividade deve ser comercio, servicos ou ambos.")
+    return round(salario_minimo * 0.05 + ATIVIDADES_MEI[atividade][1], 2)
+
+
+def analisar_mei(atividade, meses_no_ano, faturado, meses_restantes, media_prevista, salario_minimo=1621.0):
+    """Acompanha o limite do MEI no ano.
+
+    meses_no_ano: meses de atividade neste ano (12 se abriu antes; proporcional no ano de abertura).
+    faturado: total faturado no ano ate agora. meses_restantes: meses que faltam ate dezembro.
+    media_prevista: faturamento mensal esperado nos meses restantes.
+    """
+    if not 1 <= meses_no_ano <= 12 or not 0 <= meses_restantes <= meses_no_ano:
+        raise ValueError("Meses inválidos: use de 1 a 12, e meses restantes não pode passar dos meses de atividade no ano.")
+    if faturado < 0 or media_prevista < 0:
+        raise ValueError("Valores de faturamento não podem ser negativos.")
+    das = das_mei(atividade, salario_minimo)
+    limite = LIMITE_MEI / 12 * meses_no_ano
+    projecao = faturado + media_prevista * meses_restantes
+    excesso = max(0.0, projecao - limite)
+    perc = excesso / limite
+    status = "dentro" if excesso == 0 else ("ate_20" if perc <= 0.20 else "acima_20")
+    folga = max(0.0, limite - faturado)
+    nominal = ANEXOS["I" if ATIVIDADES_MEI[atividade][2] == "I" else "III"][1][0][1] / 100
+    anual = projecao / meses_no_ano * 12
+    try:
+        me_anual = round(anual * aliquota_efetiva(ATIVIDADES_MEI[atividade][2], max(anual, 1))[0], 2)
+    except ValueError:
+        me_anual = None  # acima do limite do Simples
+    return {"das_mensal": das, "limite_ano": round(limite, 2), "projecao": round(projecao, 2), "excesso": round(excesso, 2),
+            "excesso_pct": perc, "status": status, "uso_pct": faturado / limite, "folga": round(folga, 2),
+            "maximo_por_mes_restante": round(folga / meses_restantes, 2) if meses_restantes else 0.0,
+            "das_complementar_estimado": round(excesso * nominal, 2) if status == "ate_20" else None,
+            "custo_anual_mei": round(das * 12, 2), "custo_anual_microempresa": me_anual}
+
+
 def _num(msg, padrao=None):
     while True:
         txt = input(msg).strip().replace(".", "").replace(",", ".") if padrao is None else (input(msg).strip().replace(",", ".") or str(padrao))
@@ -96,7 +138,7 @@ def _num(msg, padrao=None):
 
 
 def main():
-    print("Calculadoras (simulação didática, NÃO é cálculo oficial). 1) DAS do Simples  2) Créditos IBS/CBS  Enter) sair")
+    print("Calculadoras (simulação didática, NÃO é cálculo oficial). 1) DAS do Simples  2) Créditos IBS/CBS  3) Limite do MEI  Enter) sair")
     esc = input("Opção: ").strip()
     try:
         if esc == "1":
@@ -110,6 +152,11 @@ def main():
                                  _num("Compras do mês com crédito (R$): "), _num("Alíquota IBS+CBS estimada % [26.5]: ", 26.5),
                                  das, _num("% do DAS que é IBS/CBS (estimativa) [15]: ", 15))
             print(r)
+        elif esc == "3":
+            ativ = input("Atividade (comercio, servicos, ambos): ").strip().lower()
+            meses = int(_num("Meses de atividade neste ano (12 se abriu antes): "))
+            print(analisar_mei(ativ, meses, _num("Faturado no ano até agora (R$): "), int(_num("Meses que faltam até dezembro: ")),
+                               _num("Faturamento mensal previsto (R$): ")))
     except ValueError as e:
         print(f"Dado inválido: {e}")
 

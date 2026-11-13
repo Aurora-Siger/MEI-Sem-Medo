@@ -13,6 +13,7 @@
   <p class="sub">Orientações verificadas sobre reforma tributária, Simples, créditos e vendas. <strong>Não é canal oficial</strong> da Receita, do Sebrae ou do Procon. Não digite dados pessoais.</p>
   <nav role="tablist" aria-label="Seções">
     <button role="tab" data-tab="perguntar" aria-selected="true">Perguntar</button>
+    <button role="tab" data-tab="mei" aria-selected="false">Meu MEI</button>
     <button role="tab" data-tab="temas" aria-selected="false">Temas</button>
     <button role="tab" data-tab="simples" aria-selected="false">Simples</button>
     <button role="tab" data-tab="creditos" aria-selected="false">Créditos</button>
@@ -28,6 +29,21 @@
   </form>
   <div class="chips" id="exemplos" aria-label="Exemplos de perguntas"></div>
   <div id="resposta" aria-live="polite"></div>
+</section>
+
+<section id="tab-mei" role="tabpanel" hidden>
+  <h2>Calculadora do MEI</h2>
+  <p>Veja o valor do seu DAS, quanto já usou do limite de <strong>R$ 81.000 por ano</strong> e o que acontece se passar. O MEI paga DAS de valor fixo: não calcula CBS/IBS por conta própria (veja a aba Perguntar).</p>
+  <form id="form-mei" class="grade">
+    <label>Atividade<select id="m-ativ"><option value="comercio">Comércio / indústria</option><option value="servicos">Serviços</option><option value="ambos">Comércio e serviços</option></select></label>
+    <label>Meses de atividade neste ano <small>(12 se abriu antes de janeiro)</small><input id="m-meses" inputmode="numeric" value="12"></label>
+    <label>Faturado no ano até agora, R$<input id="m-fat" inputmode="decimal" value="40000"></label>
+    <label>Meses que faltam até dezembro<input id="m-rest" inputmode="numeric" value="6"></label>
+    <label>Faturamento mensal previsto, R$<input id="m-media" inputmode="decimal" value="6000"></label>
+    <label>Salário mínimo, R$ <small>(base do INSS)</small><input id="m-sm" inputmode="decimal" value="1621"></label>
+    <button type="submit">Calcular</button>
+  </form>
+  <div id="res-mei" aria-live="polite"></div>
 </section>
 
 <section id="tab-temas" role="tabpanel" hidden>

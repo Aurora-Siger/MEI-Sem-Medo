@@ -81,6 +81,26 @@
       credito_perdido_pelo_cliente: r2(regular.credito_para_cliente_b2b - simples.credito_para_cliente_b2b), credito_compras_nao_aproveitado: creditoCompras };
   }
 
-  const api = { norm, tokens, busca, perguntar, relacionados, TEMAS, ANEXOS, aliquotaEfetiva, calcularDas, simularCreditos };
+  const ATIV_MEI = { comercio: ["Comércio / indústria", 1, "I"], servicos: ["Serviços", 5, "III"], ambos: ["Comércio e serviços", 6, "III"] };
+  function dasMei(atividade, sm = 1621) {
+    if (!ATIV_MEI[atividade]) throw new Error("Atividade deve ser comércio, serviços ou ambos.");
+    return r2(sm * 0.05 + ATIV_MEI[atividade][1]);
+  }
+  function analisarMei(atividade, meses, faturado, restantes, media, sm = 1621) {
+    if (!(meses >= 1 && meses <= 12) || !(restantes >= 0 && restantes <= meses)) throw new Error("Meses inválidos: use de 1 a 12, e meses restantes não pode passar dos meses de atividade no ano.");
+    if (!(faturado >= 0) || !(media >= 0)) throw new Error("Valores de faturamento não podem ser negativos.");
+    const das = dasMei(atividade, sm), limite = 81000 / 12 * meses, projecao = faturado + media * restantes;
+    const excesso = Math.max(0, projecao - limite), perc = excesso / limite;
+    const status = excesso === 0 ? "dentro" : perc <= 0.2 ? "ate_20" : "acima_20";
+    const folga = Math.max(0, limite - faturado), anexo = ATIV_MEI[atividade][2], nominal = ANEXOS[anexo][1][0][1] / 100;
+    const anual = projecao / meses * 12;
+    let me = null;
+    try { me = r2(anual * aliquotaEfetiva(anexo, Math.max(anual, 1)).efetiva); } catch (e) { me = null; }
+    return { das_mensal: das, limite_ano: r2(limite), projecao: r2(projecao), excesso: r2(excesso), excesso_pct: perc, status, uso_pct: faturado / limite,
+      folga: r2(folga), maximo_por_mes_restante: restantes ? r2(folga / restantes) : 0, das_complementar_estimado: status === "ate_20" ? r2(excesso * nominal) : null,
+      custo_anual_mei: r2(das * 12), custo_anual_microempresa: me };
+  }
+
+  const api = { ATIV_MEI, dasMei, analisarMei, norm, tokens, busca, perguntar, relacionados, TEMAS, ANEXOS, aliquotaEfetiva, calcularDas, simularCreditos };
   if (typeof module !== "undefined") module.exports = api; else root.Motor = api;
 })(typeof window !== "undefined" ? window : globalThis);
