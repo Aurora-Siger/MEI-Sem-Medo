@@ -6,6 +6,8 @@
   const num = (id) => parseFloat(String($(id).value).replace(/\./g, "").replace(",", "."));
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   $("n-reg").textContent = BASE.length;
+  if (location.protocol.startsWith("http"))
+    fetch("/api/status").then((r) => r.json()).then((s) => { agenteAtivo = !!s.agente; $("modo").textContent = s.agente ? "Agente de IA ativo: responde só com a base verificada e as calculadoras" : "Modo base verificada (busca por palavras-chave)"; $("modo").className = "badge " + (s.agente ? "alta" : "confirmar"); }).catch(() => {});
 
   // ----- abas -----
   document.querySelectorAll("nav button").forEach((b) => b.addEventListener("click", () => {
@@ -38,9 +40,36 @@
     d.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
   function mostrarRegistro(id) { abrirAba("perguntar"); const r = BASE.find((x) => x.id === id); msg("eu", esc(r.titulo)); msg("bot", cartao(r)); }
-  function responder(q) {
-    const res = M.perguntar(BASE, q);
+  // ----- agente de IA (opcional: só existe quando o site é servido por src/servidor.py com ANTHROPIC_API_KEY) -----
+  let agenteAtivo = false, sessao = novaSessao();
+  function novaSessao() { return (self.crypto && crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now()).replace(/[^A-Za-z0-9_-]/g, "").slice(0, 40).padEnd(8, "x"); }
+  const ABA_FERRAMENTA = { analisar_mei: ["mei", "Abrir a calculadora do MEI"], calcular_das: ["simples", "Abrir a calculadora do DAS"], simular_creditos: ["creditos", "Abrir o simulador de créditos"] };
+  const NOME_FERRAMENTA = { buscar_base: "busca na base", obter_registro: "leitura de registro", listar_temas: "lista de temas", calcular_das: "cálculo do DAS", analisar_mei: "análise do MEI", simular_creditos: "simulação de créditos" };
+  function html(t) { return esc(t).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br>"); }
+  function cartaoAgente(r) {
+    const fontes = r.fontes.length ? `<p class="fonte">Fontes:<br>${r.fontes.map((f) => `[${esc(f.id)}] <a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.fonte)}</a> · verificado em ${esc(f.verificado)}`).join("<br>")}</p>` : "";
+    const usadas = [...new Set(r.ferramentas)];
+    const botoes = usadas.filter((t) => ABA_FERRAMENTA[t]).map((t) => `<button type="button" class="ferr" data-aba="${ABA_FERRAMENTA[t][0]}">${ABA_FERRAMENTA[t][1]} →</button>`).join(" ");
+    const meta = usadas.length ? `<p class="fonte">Agente de IA · consultou: ${usadas.map((t) => NOME_FERRAMENTA[t] || t).join(", ")} · ${r.tempo_ms} ms</p>` : "";
+    return `<article class="card"><p>${html(r.texto)}</p>${fontes}${botoes ? `<p>${botoes}</p>` : ""}${meta}</article>`;
+  }
+  async function responderAgente(q) {
     msg("eu", esc(q.trim() || "(mensagem vazia)"));
+    if (!q.trim()) return msg("bot", `<div class="card"><p>Você não digitou nada. Pergunte, por exemplo: “qual o limite do MEI?”</p></div>`);
+    const espera = document.createElement("div"); espera.className = "msg bot"; espera.innerHTML = `<div class="card"><p>Consultando a base e as calculadoras…</p></div>`; log.appendChild(espera);
+    try {
+      const r = await fetch("/api/agente", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sessao, mensagem: q }) });
+      if (!r.ok) throw new Error(String(r.status));
+      const d = await r.json();
+      espera.remove();
+      if (d.modo === "erro") { msg("bot", `<div class="card"><p class="aviso">O agente de IA está indisponível agora. Mostrando a busca na base verificada.</p></div>`); return responderBase(q, false); }
+      msg("bot", cartaoAgente(d));
+    } catch (e) { espera.remove(); responderBase(q, true); }
+  }
+  function responder(q) { return agenteAtivo ? responderAgente(q) : responderBase(q, true); }
+  function responderBase(q, mostrarPergunta) {
+    const res = M.perguntar(BASE, q);
+    if (mostrarPergunta) msg("eu", esc(q.trim() || "(mensagem vazia)"));
     if (res.status === "ok") return msg("bot", cartao(res.registro));
     let h = `<div class="card"><p>${esc(res.texto)}</p>`;
     if (res.status === "ambigua") h += `<div class="opcoes">${res.opcoes.map((r) => `<button type="button" data-id="${r.id}">${esc(r.titulo)}</button>`).join("")}</div>`;
@@ -49,7 +78,7 @@
   }
   msg("bot", `<div class="card"><p>Oi! Sou o assistente do MEI sem Medo. Respondo só com base em fontes verificadas e digo quando não sei. Pergunte sobre MEI, Simples, reforma tributária, split payment, créditos ou vendas. Em várias respostas eu abro a calculadora certa para você.</p></div>`);
   $("form-pergunta").addEventListener("submit", (e) => { e.preventDefault(); responder($("pergunta").value); $("pergunta").value = ""; $("pergunta").focus(); });
-  $("limpar").onclick = () => { log.innerHTML = ""; };
+  $("limpar").onclick = () => { log.innerHTML = ""; sessao = novaSessao(); };
   ["Qual o limite de faturamento do MEI?", "O que é split payment?", "Qual anexo do Simples eu me encaixo?", "Como recuperar créditos de imposto?", "O cliente pode devolver compra online?"]
     .forEach((q) => { const b = document.createElement("button"); b.type = "button"; b.textContent = q; b.onclick = () => responder(q); $("exemplos").appendChild(b); });
 
