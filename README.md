@@ -54,16 +54,27 @@ Além da busca por palavras-chave, o projeto tem um **agente de IA de verdade** 
 - falha de rede, chave ou recusa de segurança não derrubam o app: o site volta para a busca na base.
 Limitação: o código verifica que há fonte e que o id existe, mas não checa cada número do texto contra o registro; por isso o prompt exige citar e as respostas são curtas.
 **Como usar:**
+No macOS, abra o Terminal na pasta do projeto e crie um ambiente virtual para não instalar pacotes no Python do sistema:
 ```
-pip install -r requirements.txt
-export ANTHROPIC_API_KEY=sua-chave        # Windows PowerShell: $env:ANTHROPIC_API_KEY="sua-chave"
-python src/servidor.py                    # abre http://127.0.0.1:8000 com o agente ativo
-python src/agente.py                      # ou o agente no terminal
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
 ```
+Para iniciar o site, ainda no Terminal e com o ambiente ativado:
+```
+python src/servidor.py
+```
+Depois, abra http://127.0.0.1:8000 no navegador. Sem chave de API, o site usa a busca na base verificada. Para habilitar o agente de IA, configure a chave antes de iniciar o servidor:
+```
+export ANTHROPIC_API_KEY="sua-chave"
+python src/servidor.py
+```
+No Windows PowerShell, use `$env:ANTHROPIC_API_KEY="sua-chave"`. Para usar o agente no terminal, execute `python src/agente.py` com a chave configurada.
 O modelo padrão é `claude-opus-5-5` (troque com `MEI_MODELO=claude-sonnet-5-5` para gastar menos). A chave fica só no servidor e o navegador nunca a vê; o servidor limita 20 perguntas por minuto por IP e aceita só a própria origem. **Sem chave, tudo continua funcionando no modo base verificada.** O site publicado no GitHub Pages é estático e usa esse modo; o agente precisa do servidor. Para uso público, coloque o servidor atrás de autenticação e defina um limite de gasto na conta da API.
 Testes (sem gastar API, com cliente simulado): `python tests/test_agente.py` e `python tests/test_servidor.py`.
 
 ## 7. Como executar
+Os comandos abaixo devem ser executados na pasta do projeto, com o ambiente virtual ativado no macOS (`source .venv/bin/activate`).
 ```
 python src/sistema.py              # requer só Python 3.8+
 python src/sistema.py --modelo B
