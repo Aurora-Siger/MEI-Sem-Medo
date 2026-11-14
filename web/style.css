@@ -1,5 +1,5 @@
-:root{--bg:#fafaf7;--fg:#1c1b19;--mut:#5d5b55;--card:#fff;--bd:#dcd9d0;--ac:#0b6b4f;--acfg:#fff;--warn:#8a5300;--warnbg:#fff3dc;--ok:#0b6b4f;--okbg:#e3f4ec}
-@media (prefers-color-scheme:dark){:root{--bg:#161614;--fg:#eeece6;--mut:#aaa79d;--card:#201f1c;--bd:#3a3832;--ac:#4cc49a;--acfg:#08241b;--warn:#f0b45a;--warnbg:#3a2c10;--ok:#4cc49a;--okbg:#12281f}}
+:root{--bg:#fff8ee;--fg:#1f1a33;--mut:#5e5873;--card:#fff;--bd:#eadfce;--ac:#5b3df5;--acfg:#fff;--warn:#9a4b00;--warnbg:#ffe9cc;--ok:#0b6b4f;--okbg:#dff7ec;--sun:#ffc933;--coral:#ff6b6b;--mint:#2ec4b6;--sombra:0 6px 0 rgba(31,26,51,.10)}
+@media (prefers-color-scheme:dark){:root{--bg:#17132b;--fg:#f3efff;--mut:#b9b2d6;--card:#221c3f;--bd:#3a3263;--ac:#a99bff;--acfg:#17132b;--warn:#ffc27a;--warnbg:#3b2a12;--ok:#6ee7b7;--okbg:#0f2c25;--sombra:0 6px 0 rgba(0,0,0,.35)}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
 .skip{position:absolute;left:-999px}.skip:focus{left:8px;top:8px;background:var(--card);padding:8px;z-index:9}
@@ -88,4 +88,46 @@ header .sub{margin:0 0 6px}
 .lista{display:grid;gap:10px}
 details.ajustes{grid-column:1/-1;background:none;border:0;padding:0;margin:6px 0}details.ajustes summary{color:var(--mut);font-weight:400;text-decoration:underline}
 #form-pergunta{margin-top:12px}
-@media (max-width:420px){.atalhos{grid-template-columns:1fr}}
+
+/* ================= modo alegria ================= */
+body{background:radial-gradient(circle at 12% -4%,rgba(255,201,51,.28),transparent 38%),radial-gradient(circle at 96% 6%,rgba(46,196,182,.22),transparent 34%),var(--bg);min-height:100vh}
+h1{font-size:2rem;letter-spacing:-.5px;margin:6px 0}
+.hero{display:flex;align-items:center;gap:14px;padding-top:14px}
+.hero .mei{width:92px;height:92px;flex:none;animation:flutua 3.2s ease-in-out infinite;filter:drop-shadow(0 6px 0 rgba(31,26,51,.12))}
+.hero h1 span{background:linear-gradient(90deg,var(--ac),var(--coral));-webkit-background-clip:text;background-clip:text;color:transparent}
+.balao{position:relative;background:var(--card);border:2px solid var(--bd);border-radius:18px;padding:10px 14px;margin:0;box-shadow:var(--sombra)}
+.balao::before{content:"";position:absolute;left:-9px;top:26px;width:14px;height:14px;background:var(--card);border-left:2px solid var(--bd);border-bottom:2px solid var(--bd);transform:rotate(45deg)}
+@keyframes flutua{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-6px) rotate(3deg)}}
+button,.ferr-card{transition:transform .12s ease,box-shadow .12s ease}
+button[type=submit]{border-radius:14px;box-shadow:var(--sombra);font-size:1.02rem}
+button[type=submit]:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(31,26,51,.10)}
+input,select{border-radius:14px;border:2px solid var(--bd)}input:focus,select:focus{border-color:var(--ac)}
+.linha input{font-size:1.05rem}
+.atalhos button{border:2px solid var(--bd);border-radius:20px;box-shadow:var(--sombra);font-size:1.02rem;display:flex;flex-direction:column;align-items:center;gap:4px;line-height:1.2}
+.atalhos button .em{font-size:1.9rem}
+.atalhos button:nth-child(1){background:#e9e4ff}.atalhos button:nth-child(2){background:#ffefb8}.atalhos button:nth-child(3){background:#d8f6f2}.atalhos button:nth-child(4){background:#ffe0e0}
+.atalhos button,.atalhos button.forte{color:#1f1a33;border-color:rgba(31,26,51,.12)}
+@media (prefers-color-scheme:dark){.atalhos button:nth-child(1){background:#33295f}.atalhos button:nth-child(2){background:#4a3d12}.atalhos button:nth-child(3){background:#12403c}.atalhos button:nth-child(4){background:#4d2530}.atalhos button,.atalhos button.forte{color:#f3efff;border-color:rgba(255,255,255,.12)}}
+.atalhos button:hover{transform:translateY(-3px) rotate(-1deg)}.atalhos button:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(31,26,51,.10)}
+.msg.bot{display:flex;gap:10px;align-items:flex-start}.msg.bot>.card,.msg.bot>article{flex:1;min-width:0}
+.msg .avatar{width:38px;height:38px;flex:none}
+.msg.eu{background:linear-gradient(135deg,var(--ac),#8a4dff);border-radius:20px 20px 4px 20px;box-shadow:var(--sombra)}
+.msg{animation:entra .28s ease both}@keyframes entra{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+.card{border:2px solid var(--bd);border-radius:20px;box-shadow:var(--sombra)}
+.digitando{display:inline-flex;gap:5px;padding:6px 2px}.digitando i{width:9px;height:9px;border-radius:50%;background:var(--ac);animation:pula 1s infinite ease-in-out}.digitando i:nth-child(2){animation-delay:.15s;background:var(--coral)}.digitando i:nth-child(3){animation-delay:.3s;background:var(--mint)}
+@keyframes pula{0%,80%,100%{transform:translateY(0);opacity:.5}40%{transform:translateY(-7px);opacity:1}}
+.preco-grande{font-size:2.8rem;background:linear-gradient(90deg,var(--ac),var(--coral));-webkit-background-clip:text;background-clip:text;color:transparent}
+.preco-grande.pop{animation:pop .5s cubic-bezier(.3,1.6,.5,1)}@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+.uso{height:22px;border-radius:12px;border:2px solid var(--bd);background:var(--card)}.uso div{background:linear-gradient(90deg,var(--mint),var(--ac));border-radius:10px;transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.uso.ate_20 div{background:linear-gradient(90deg,var(--sun),var(--coral))}.uso.acima_20 div{background:var(--coral)}
+.ferr-card{border:2px solid var(--bd);border-radius:18px;box-shadow:var(--sombra)}.ferr-card:hover{transform:translateY(-2px)}
+.voltar{border:2px solid var(--bd);border-radius:999px;background:var(--card)}
+.badge{border-radius:999px}
+.aviso{border-radius:14px}
+h2{font-size:1.45rem}
+.confete{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:50}
+.confete i{position:absolute;top:-14px;width:10px;height:14px;border-radius:3px;animation:cai var(--d) ease-in forwards}
+@keyframes cai{to{transform:translate(var(--x),105vh) rotate(var(--r));opacity:.9}}
+footer{text-align:center}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.confete{display:none}}
+.atalhos button{min-height:0;padding:14px 8px}.atalhos button .em{font-size:1.7rem}.atalhos{gap:12px}

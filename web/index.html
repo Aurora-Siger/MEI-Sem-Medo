@@ -8,9 +8,23 @@
 </head>
 <body>
 <a class="skip" href="#main">Ir para o conteúdo</a>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="mei" viewBox="0 0 120 120">
+  <path d="M22 52 Q8 96 28 110 L60 94 L92 110 Q112 96 98 52 Z" fill="#ff6b6b"/>
+  <circle cx="60" cy="58" r="40" fill="#ffc933" stroke="#e0a400" stroke-width="4"/>
+  <circle cx="60" cy="58" r="31" fill="none" stroke="#e0a400" stroke-width="2" stroke-dasharray="3 4"/>
+  <circle cx="47" cy="52" r="5" fill="#1f1a33"/><circle cx="73" cy="52" r="5" fill="#1f1a33"/>
+  <circle cx="48.6" cy="50.4" r="1.8" fill="#fff"/><circle cx="74.6" cy="50.4" r="1.8" fill="#fff"/>
+  <path d="M44 67 Q60 85 76 67" fill="none" stroke="#1f1a33" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="37" cy="65" r="5" fill="#ff8f8f" opacity=".75"/><circle cx="83" cy="65" r="5" fill="#ff8f8f" opacity=".75"/>
+</symbol></svg>
 <header>
-  <h1>MEI sem Medo</h1>
-  <p class="sub">Pergunte sobre o seu negócio. Respondo com a fonte e digo quando não sei.</p>
+  <div class="hero">
+    <svg class="mei" role="img" aria-label="Mei, a moedinha mascote"><use href="#mei"/></svg>
+    <div>
+      <h1>MEI <span>sem Medo</span></h1>
+      <p class="balao">Oi! Eu sou a Mei 👋 Me pergunta de MEI, preço ou imposto. Respondo com a fonte e, se não souber, eu falo!</p>
+    </div>
+  </div>
   <p id="voltar-barra" hidden><button type="button" class="voltar" data-aba="perguntar">← Voltar</button></p>
 </header>
 <main id="main">
@@ -19,19 +33,19 @@
   <div id="resposta" role="log" aria-live="polite" aria-label="Conversa com o assistente"></div>
   <form id="form-pergunta">
     <label for="pergunta" class="sr">Escreva sua pergunta</label>
-    <div class="linha"><input id="pergunta" autocomplete="off" maxlength="300" placeholder="Escreva sua dúvida aqui"><button type="submit">Enviar</button></div>
+    <div class="linha"><input id="pergunta" autocomplete="off" maxlength="300" placeholder="Pergunta aí! Ex.: quanto cobrar?"><button type="submit">Enviar</button></div>
   </form>
   <div class="atalhos" id="atalhos">
-    <button type="button" data-pergunta="Quero abrir um MEI, por onde começo?">Quero abrir um MEI</button>
-    <button type="button" data-aba="preco" class="forte">Quanto cobrar?</button>
-    <button type="button" data-aba="mei">Passei do limite do MEI?</button>
-    <button type="button" data-pergunta="Como emitir nota fiscal?">Como emitir nota fiscal</button>
+    <button type="button" data-pergunta="Quero abrir um MEI, por onde começo?"><span class="em">🚀</span>Quero abrir meu MEI</button>
+    <button type="button" data-aba="preco" class="forte"><span class="em">💰</span>Quanto cobrar?</button>
+    <button type="button" data-aba="mei"><span class="em">📏</span>Será que passei do limite?</button>
+    <button type="button" data-pergunta="Como emitir nota fiscal?"><span class="em">🧾</span>Como emitir nota fiscal</button>
   </div>
   <p class="rodape-links"><button type="button" class="link" data-aba="mais">Mais ferramentas</button> · <button type="button" id="limpar" class="link">Limpar conversa</button></p>
 </section>
 
 <section id="tab-mais" role="tabpanel" hidden>
-  <h2>Mais ferramentas</h2>
+  <h2>🧰 Mais ferramentas</h2>
   <div class="lista">
     <button type="button" class="ferr-card" data-aba="simples"><strong>Simples Nacional</strong><span>Qual é o seu anexo e quanto vai de imposto</span></button>
     <button type="button" class="ferr-card" data-aba="temas"><strong>Todos os assuntos</strong><span>Navegue pelas orientações</span></button>
@@ -42,7 +56,7 @@
 </section>
 
 <section id="tab-preco" role="tabpanel" hidden>
-  <h2>Quanto cobrar? Calculadora de preço</h2>
+  <h2>💰 Quanto cobrar?</h2>
   <p>Descubra o preço que paga as contas e ainda deixa lucro (método do Sebrae).</p>
   <fieldset class="modo-preco"><legend>O que você vende?</legend>
     <label class="radio"><input type="radio" name="p-modo" value="produto" checked> Produto</label>
@@ -67,13 +81,13 @@
       <label>Imposto sobre a venda (%)<small>No MEI deixe 0: o DAS é fixo e já está nos gastos fixos.</small><input id="p-imposto" inputmode="decimal" value="0"></label>
       <label>Lucro que você quer sobre o preço (%)<input id="p-lucro" inputmode="decimal" value="20"></label>
     </details>
-    <button type="submit">Calcular preço</button>
+    <button type="submit">Calcular meu preço ✨</button>
   </form>
   <div id="res-preco" aria-live="polite"></div>
 </section>
 
 <section id="tab-mei" role="tabpanel" hidden>
-  <h2>Passei do limite do MEI?</h2>
+  <h2>📏 Será que passei do limite?</h2>
   <p>O limite é de <strong>R$ 81.000 por ano</strong>. Veja onde você está e quanto ainda pode faturar.</p>
   <form id="form-mei" class="grade">
     <label>O que você faz?<select id="m-ativ"><option value="comercio">Vendo produtos</option><option value="servicos">Presto serviços</option><option value="ambos">As duas coisas</option></select></label>
@@ -84,7 +98,7 @@
       <label>Meses que faltam até dezembro<input id="m-rest" inputmode="numeric" value="1"></label>
       <label>Salário mínimo (R$)<input id="m-sm" inputmode="decimal" value="1621"></label>
     </details>
-    <button type="submit">Ver minha situação</button>
+    <button type="submit">Ver minha situação 🔎</button>
   </form>
   <div id="res-mei" aria-live="polite"></div>
 </section>
@@ -210,7 +224,7 @@
 
 </main>
 <footer>
-  <p><span id="modo" class="badge confirmar">Busca na base verificada</span><br>Não somos canal oficial da Receita, do Sebrae ou do Procon. Não digite dados pessoais. As regras mudam: confirme em canal oficial ou com um contador. <span id="n-reg"></span> orientações com fonte e data. Projeto acadêmico (FIAP Global Solution 2026.2).</p>
+  <p><span id="modo" class="badge confirmar">Busca na base verificada</span><br>Não somos canal oficial da Receita, do Sebrae ou do Procon. Não digite dados pessoais. As regras mudam: confirme em canal oficial ou com um contador. <span id="n-reg"></span> orientações com fonte e data. Feito com 💜 para a FIAP Global Solution 2026.2.</p>
 </footer>
 <script src="base.js"></script>
 <script src="motor.js"></script>

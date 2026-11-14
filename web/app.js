@@ -36,9 +36,10 @@
       ${rel.length ? `<div class="rel"><span>Veja também</span>${rel.map((x) => `<button type="button" data-id="${x.id}">${esc(x.titulo)}</button>`).join("")}</div>` : ""}${extra}</article>`;
   }
   const log = $("resposta");
+  const AVATAR = `<svg class="avatar" aria-hidden="true"><use href="#mei"/></svg>`;
   function msg(cls, html) {
     $("atalhos").hidden = true;
-    const d = document.createElement("div"); d.className = "msg " + cls; d.innerHTML = html; log.appendChild(d);
+    const d = document.createElement("div"); d.className = "msg " + cls; d.innerHTML = (cls === "bot" ? AVATAR : "") + html; log.appendChild(d);
     d.querySelectorAll("[data-id]").forEach((b) => (b.onclick = () => { msg("eu", esc(b.textContent)); msg("bot", cartao(BASE.find((r) => r.id === b.dataset.id))); }));
     d.querySelectorAll("[data-aba]").forEach((b) => (b.onclick = () => abrirAba(b.dataset.aba)));
     d.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -61,7 +62,7 @@
   async function responderAgente(q) {
     msg("eu", esc(q.trim() || "(mensagem vazia)"));
     if (!q.trim()) return msg("bot", `<div class="card"><p>Você não digitou nada. Pergunte, por exemplo: “qual o limite do MEI?”</p></div>`);
-    const espera = document.createElement("div"); espera.className = "msg bot"; espera.innerHTML = `<div class="card"><p>Consultando a base e as calculadoras…</p></div>`; log.appendChild(espera);
+    const espera = document.createElement("div"); espera.className = "msg bot"; espera.innerHTML = AVATAR + `<div class="card"><span class="digitando" role="status" aria-label="A Mei está pensando"><i></i><i></i><i></i></span></div>`; log.appendChild(espera);
     try {
       const r = await fetch("/api/agente", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sessao, mensagem: q }) });
       if (!r.ok) throw new Error(String(r.status));
@@ -118,15 +119,16 @@
     e.preventDefault();
     try {
       const r = M.analisarMei($("m-ativ").value, num("m-meses"), num("m-fat"), num("m-rest"), num("m-media"), num("m-sm"));
-      const msg = { dentro: `<p>✅ Você deve terminar o ano <strong>dentro do limite</strong>. Pode faturar até <strong>${brl(r.maximo_por_mes_restante)} por mês</strong> nos meses que faltam.</p>`,
-        ate_20: `<p class="aviso">⚠ Você passaria do limite em <strong>${brl(r.excesso)}</strong>. Até 20% de excesso você segue no MEI até dezembro, paga um DAS complementar (cerca de <strong>${brl(r.das_complementar_estimado)}</strong>) e vira microempresa no ano seguinte.</p>`,
-        acima_20: `<p class="aviso">⛔ Você passaria do limite em <strong>${brl(r.excesso)}</strong>, mais de 20%. Aí você é desenquadrado desde o começo do ano e paga imposto de microempresa retroativo. Fale com um contador antes.</p>` }[r.status];
+      const msg = { dentro: `<p>🎉 Tudo certo! Você deve terminar o ano <strong>dentro do limite</strong>. Pode faturar até <strong>${brl(r.maximo_por_mes_restante)} por mês</strong> nos meses que faltam.</p>`,
+        ate_20: `<p class="aviso">😅 Atenção! Você passaria do limite em <strong>${brl(r.excesso)}</strong>. Até 20% de excesso você segue no MEI até dezembro, paga um DAS complementar (cerca de <strong>${brl(r.das_complementar_estimado)}</strong>) e vira microempresa no ano seguinte.</p>`,
+        acima_20: `<p class="aviso">🚨 Cuidado! Você passaria do limite em <strong>${brl(r.excesso)}</strong>, mais de 20%. Aí você é desenquadrado desde o começo do ano e paga imposto de microempresa retroativo. Fale com um contador antes.</p>` }[r.status];
       $("res-mei").innerHTML = `<div class="card"><div class="num">${brl(r.das_mensal)}<small> de DAS por mês</small></div>
         <p>Você já usou <strong>${pct(r.uso_pct)}</strong> do limite de ${brl(r.limite_ano)}.</p>
         <div class="uso ${r.status}" role="img" aria-label="${pct(Math.min(r.uso_pct, 1))} do limite usado"><div style="width:${Math.min(r.uso_pct, 1) * 100}%"></div></div>${msg}
         <details class="ajustes"><summary>E se eu virar microempresa?</summary>
         <p>MEI: ${brl(r.custo_anual_mei)} de DAS por ano. Microempresa no Simples: ${r.custo_anual_microempresa == null ? "fora do limite" : `cerca de <strong>${brl(r.custo_anual_microempresa)}</strong> por ano`} (estimativa só do imposto).</p></details>
         <p class="fonte">Confirme no Portal do Empreendedor.</p></div>`;
+      if (r.status === "dentro") confete();
     } catch (err) { erro($("res-mei"), err); }
   });
 
@@ -458,6 +460,21 @@
   }
   $("form-split").addEventListener("input", split); $("form-split").addEventListener("submit", (e) => e.preventDefault()); split();
 
+  // ----- alegria: confete e contagem -----
+  const calmo = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function confete() {
+    if (calmo) return;
+    const box = document.createElement("div"); box.className = "confete"; box.setAttribute("aria-hidden", "true");
+    const cores = ["#ffc933", "#ff6b6b", "#2ec4b6", "#5b3df5", "#ff8fcf"];
+    for (let i = 0; i < 34; i++) { const p = document.createElement("i"); p.style.cssText = `left:${Math.random() * 100}%;background:${cores[i % 5]};--x:${(Math.random() - .5) * 160}px;--r:${Math.random() * 720}deg;--d:${1.1 + Math.random() * 1.1}s;animation-delay:${Math.random() * .25}s`; box.appendChild(p); }
+    document.body.appendChild(box); setTimeout(() => box.remove(), 2800);
+  }
+  function contar(el, fim) {
+    if (calmo) return;
+    const t0 = performance.now(); el.classList.add("pop");
+    (function passo(t) { const k = Math.min(1, (t - t0) / 700); el.textContent = brl(fim * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(passo); })(t0);
+  }
+
   // ----- preço -----
   const modoPreco = () => document.querySelector("input[name=p-modo]:checked").value;
   document.querySelectorAll("input[name=p-modo]").forEach((r) => r.addEventListener("change", () => {
@@ -472,11 +489,11 @@
         : M.precoServico(num("s-renda"), num("s-fixos"), num("s-horas"), num("s-horas-serv"), num("s-material") || 0, ...v, atual);
       const c = r.composicao, total = r.preco_sugerido || 1, seg = [["c1", modoPreco() === "produto" ? "Custo" : "Seu tempo e material", c.custo_direto], ...(modoPreco() === "produto" ? [["c2", "Gastos fixos", c.custo_fixo_rateado]] : []), ["c3", "Taxas e impostos", c.variaveis + c.impostos], ["c4", "Seu lucro", c.lucro]];
       const rotulo = modoPreco() === "produto" ? "por unidade" : "por este serviço";
-      const status = !r.preco_atual ? "" : { prejuizo: `<p class="aviso">⛔ Com o preço de hoje (${brl(r.preco_atual.valor)}) você <strong>perde ${brl(-r.preco_atual.lucro_unit)}</strong> ${rotulo}.</p>`,
-        abaixo_da_meta: `<p class="aviso">⚠ Com o preço de hoje (${brl(r.preco_atual.valor)}) você ganha ${brl(r.preco_atual.lucro_unit)} ${rotulo} (${r.preco_atual.margem_pct.toLocaleString("pt-BR")}% do preço), abaixo da sua meta.</p>`,
-        ok: `<p>✅ O preço de hoje (${brl(r.preco_atual.valor)}) já atinge a sua meta de lucro.</p>` }[r.preco_atual.status];
+      const status = !r.preco_atual ? "" : { prejuizo: `<p class="aviso">😬 Opa! Com o preço de hoje (${brl(r.preco_atual.valor)}) você <strong>perde ${brl(-r.preco_atual.lucro_unit)}</strong> ${rotulo}.</p>`,
+        abaixo_da_meta: `<p class="aviso">🙂 Dá lucro, mas pouco. Com o preço de hoje (${brl(r.preco_atual.valor)}) você ganha ${brl(r.preco_atual.lucro_unit)} ${rotulo} (${r.preco_atual.margem_pct.toLocaleString("pt-BR")}% do preço), abaixo da sua meta.</p>`,
+        ok: `<p>🎉 Boa! O preço de hoje (${brl(r.preco_atual.valor)}) já atinge a sua meta de lucro.</p>` }[r.preco_atual.status];
       const prod = modoPreco() === "produto";
-      $("res-preco").innerHTML = `<div class="card"><p>Cobre, ${rotulo}:</p><div class="preco-grande">${brl(r.preco_sugerido)}</div>${status}
+      $("res-preco").innerHTML = `<div class="card"><p>💸 Cobre, ${rotulo}:</p><div class="preco-grande" id="preco-valor">${brl(r.preco_sugerido)}</div>${status}
         <p>Nunca venda abaixo de <strong>${brl(r.preco_minimo)}</strong>: aí você paga para vender.</p>
         ${prod ? `<p>Você precisa vender <strong>${r.ponto_equilibrio_unidades == null ? "mais do que consegue" : Math.ceil(r.ponto_equilibrio_unidades).toLocaleString("pt-BR") + " unidades por mês"}</strong> para pagar as contas.</p>` : `<p>Sua hora vale <strong>${brl(r.valor_hora)}</strong> só para cobrir sua renda e seus gastos.</p>`}
         <details class="ajustes"><summary>Ver como o preço foi montado</summary>
@@ -484,6 +501,8 @@
         <div class="leg">${seg.map(([k, n, x]) => `<span><i class="${k}"></i>${n}: ${brl(x)}</span>`).join("")}</div>
         ${prod ? `<p>Vendendo ${num("p-volume").toLocaleString("pt-BR")} por mês, sobra de lucro cerca de <strong>${brl(r.lucro_mensal_estimado)}</strong>, fora o que você já separou para você nos gastos fixos. Dá para dar até ${r.desconto_maximo_pct.toLocaleString("pt-BR")}% de desconto sem prejuízo.</p>` : ""}</details>
         <p class="fonte">Ponto de partida (método do Sebrae): compare com os concorrentes.</p></div>`;
+      contar($("preco-valor"), r.preco_sugerido);
+      if (!r.preco_atual || r.preco_atual.status !== "prejuizo") confete();
     } catch (err) { erro($("res-preco"), err); }
   });
 })();
