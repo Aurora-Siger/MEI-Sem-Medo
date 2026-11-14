@@ -37,6 +37,7 @@
   }
   const log = $("resposta");
   function msg(cls, html) {
+    $("atalhos").hidden = true;
     const d = document.createElement("div"); d.className = "msg " + cls; d.innerHTML = html; log.appendChild(d);
     d.querySelectorAll("[data-id]").forEach((b) => (b.onclick = () => { msg("eu", esc(b.textContent)); msg("bot", cartao(BASE.find((r) => r.id === b.dataset.id))); }));
     d.querySelectorAll("[data-aba]").forEach((b) => (b.onclick = () => abrirAba(b.dataset.aba)));
@@ -80,11 +81,10 @@
     if (res.status === "desconhecida") h += `<p>Temas que eu cubro: ${Object.values(M.TEMAS).map(esc).join(", ")}. Veja a aba “Temas” ou use as calculadoras.</p>`;
     msg("bot", h + "</div>");
   }
-  msg("bot", `<div class="card"><p>Oi! Eu ajudo quem tem um pequeno negócio. Pode perguntar como abrir o MEI, quanto cobrar, impostos, nota fiscal, funcionário ou direitos do cliente. Respondo só com base em fontes oficiais e digo quando não sei.</p></div>`);
   $("form-pergunta").addEventListener("submit", (e) => { e.preventDefault(); responder($("pergunta").value); $("pergunta").value = ""; $("pergunta").focus(); });
-  $("limpar").onclick = () => { log.innerHTML = ""; sessao = novaSessao(); };
-  ["Quero abrir um MEI, por onde começo?", "Quanto devo cobrar pelo meu produto?", "Passei do limite do MEI, e agora?", "Posso contratar um funcionário?", "Como emitir nota fiscal?", "O que muda com a reforma tributária?"]
-    .forEach((q) => { const b = document.createElement("button"); b.type = "button"; b.textContent = q; b.onclick = () => responder(q); $("exemplos").appendChild(b); });
+  $("limpar").onclick = () => { log.innerHTML = ""; sessao = novaSessao(); atalhos.hidden = false; };
+  const atalhos = $("atalhos");
+  atalhos.querySelectorAll("[data-pergunta]").forEach((b) => (b.onclick = () => responder(b.dataset.pergunta)));
 
   // ----- temas -----
   $("lista-temas").innerHTML = Object.keys(M.TEMAS).filter((t) => BASE.some((r) => r.tema === t)).map((t) =>
@@ -113,20 +113,20 @@
   });
 
   // ----- MEI -----
+  { const rest = Math.max(0, 11 - new Date().getMonth()); $("m-rest").value = rest; }
   $("form-mei").addEventListener("submit", (e) => {
     e.preventDefault();
     try {
       const r = M.analisarMei($("m-ativ").value, num("m-meses"), num("m-fat"), num("m-rest"), num("m-media"), num("m-sm"));
-      const msg = { dentro: `<p>✅ Pela sua previsão você termina o ano <strong>dentro do limite</strong>. Para ficar seguro, não passe de <strong>${brl(r.maximo_por_mes_restante)} por mês</strong> nos meses que faltam.</p>`,
-        ate_20: `<p class="aviso">⚠ Você passaria do limite em <strong>${brl(r.excesso)}</strong> (${pct(r.excesso_pct)}). Até 20% de excesso, segue no MEI até dezembro, paga um DAS complementar (estimado em <strong>${brl(r.das_complementar_estimado)}</strong>) e vira microempresa no ano seguinte. Confirme o cálculo no Portal do Empreendedor.</p>`,
-        acima_20: `<p class="aviso">⛔ O excesso seria de <strong>${brl(r.excesso)}</strong> (${pct(r.excesso_pct)}), acima de 20%. Nesse caso o desenquadramento vale desde janeiro (ou desde a abertura) e os impostos de microempresa são cobrados retroativamente. Converse com um contador antes de chegar lá.</p>` }[r.status];
+      const msg = { dentro: `<p>✅ Você deve terminar o ano <strong>dentro do limite</strong>. Pode faturar até <strong>${brl(r.maximo_por_mes_restante)} por mês</strong> nos meses que faltam.</p>`,
+        ate_20: `<p class="aviso">⚠ Você passaria do limite em <strong>${brl(r.excesso)}</strong>. Até 20% de excesso você segue no MEI até dezembro, paga um DAS complementar (cerca de <strong>${brl(r.das_complementar_estimado)}</strong>) e vira microempresa no ano seguinte.</p>`,
+        acima_20: `<p class="aviso">⛔ Você passaria do limite em <strong>${brl(r.excesso)}</strong>, mais de 20%. Aí você é desenquadrado desde o começo do ano e paga imposto de microempresa retroativo. Fale com um contador antes.</p>` }[r.status];
       $("res-mei").innerHTML = `<div class="card"><div class="num">${brl(r.das_mensal)}<small> de DAS por mês</small></div>
-        <p>Limite deste ano: <strong>${brl(r.limite_ano)}</strong> · usado até agora: <strong>${pct(r.uso_pct)}</strong></p>
-        <div class="uso ${r.status}" role="img" aria-label="${pct(Math.min(r.uso_pct, 1))} do limite usado"><div style="width:${Math.min(r.uso_pct, 1) * 100}%"></div></div>
-        <p>Projeção do ano: <strong>${brl(r.projecao)}</strong></p>${msg}</div>
-        <div class="card"><h3>E se eu virar microempresa?</h3>
-        <p>MEI: ${brl(r.custo_anual_mei)} de DAS por ano. Microempresa no Simples (Anexo ${M.ATIV_MEI[$("m-ativ").value][2]}), com essa receita: ${r.custo_anual_microempresa == null ? "fora do limite do Simples" : `cerca de <strong>${brl(r.custo_anual_microempresa)}</strong> por ano`}.</p>
-        <p class="fonte">Estimativa só do DAS, sem contador, pró-labore ou outros custos. Caminhoneiro MEI tem outra regra de INSS (12%), não coberta aqui.</p></div>`;
+        <p>Você já usou <strong>${pct(r.uso_pct)}</strong> do limite de ${brl(r.limite_ano)}.</p>
+        <div class="uso ${r.status}" role="img" aria-label="${pct(Math.min(r.uso_pct, 1))} do limite usado"><div style="width:${Math.min(r.uso_pct, 1) * 100}%"></div></div>${msg}
+        <details class="ajustes"><summary>E se eu virar microempresa?</summary>
+        <p>MEI: ${brl(r.custo_anual_mei)} de DAS por ano. Microempresa no Simples: ${r.custo_anual_microempresa == null ? "fora do limite" : `cerca de <strong>${brl(r.custo_anual_microempresa)}</strong> por ano`} (estimativa só do imposto).</p></details>
+        <p class="fonte">Confirme no Portal do Empreendedor.</p></div>`;
     } catch (err) { erro($("res-mei"), err); }
   });
 
@@ -475,15 +475,15 @@
       const status = !r.preco_atual ? "" : { prejuizo: `<p class="aviso">⛔ Com o preço de hoje (${brl(r.preco_atual.valor)}) você <strong>perde ${brl(-r.preco_atual.lucro_unit)}</strong> ${rotulo}.</p>`,
         abaixo_da_meta: `<p class="aviso">⚠ Com o preço de hoje (${brl(r.preco_atual.valor)}) você ganha ${brl(r.preco_atual.lucro_unit)} ${rotulo} (${r.preco_atual.margem_pct.toLocaleString("pt-BR")}% do preço), abaixo da sua meta.</p>`,
         ok: `<p>✅ O preço de hoje (${brl(r.preco_atual.valor)}) já atinge a sua meta de lucro.</p>` }[r.preco_atual.status];
-      $("res-preco").innerHTML = `<div class="card"><p>Cobre, ${rotulo}:</p><div class="preco-grande">${brl(r.preco_sugerido)}</div>
+      const prod = modoPreco() === "produto";
+      $("res-preco").innerHTML = `<div class="card"><p>Cobre, ${rotulo}:</p><div class="preco-grande">${brl(r.preco_sugerido)}</div>${status}
+        <p>Nunca venda abaixo de <strong>${brl(r.preco_minimo)}</strong>: aí você paga para vender.</p>
+        ${prod ? `<p>Você precisa vender <strong>${r.ponto_equilibrio_unidades == null ? "mais do que consegue" : Math.ceil(r.ponto_equilibrio_unidades).toLocaleString("pt-BR") + " unidades por mês"}</strong> para pagar as contas.</p>` : `<p>Sua hora vale <strong>${brl(r.valor_hora)}</strong> só para cobrir sua renda e seus gastos.</p>`}
+        <details class="ajustes"><summary>Ver como o preço foi montado</summary>
         <div class="pilha" role="img" aria-label="Composição do preço">${seg.map(([k, n, x]) => `<div class="${k}" style="width:${Math.max(x, 0) / total * 100}%"></div>`).join("")}</div>
-        <div class="leg">${seg.map(([k, n, x]) => `<span><i class="${k}"></i>${n}: ${brl(x)}</span>`).join("")}</div>${status}</div>
-        <div class="card"><h3>O que isso significa</h3><ul>
-        <li><strong>Preço mínimo: ${brl(r.preco_minimo)}.</strong> Abaixo disso você paga para vender. Na prática, dá para dar até <strong>${r.desconto_maximo_pct.toLocaleString("pt-BR")}% de desconto</strong> sobre o preço sugerido sem ter prejuízo (mas sem lucro).</li>
-        ${modoPreco() === "produto" ? `<li>Você precisa vender <strong>${r.ponto_equilibrio_unidades == null ? "mais unidades do que consegue" : r.ponto_equilibrio_unidades.toLocaleString("pt-BR") + " unidades por mês"}</strong> só para pagar as contas (ponto de equilíbrio).</li>
-        <li>Vendendo ${num("p-volume").toLocaleString("pt-BR")} unidades por mês, o lucro estimado é de <strong>${brl(r.lucro_mensal_estimado)}</strong> por mês, além do que você já separou para si nos gastos fixos.</li>` : `<li>Seu valor por hora, só para cobrir sua renda e seus gastos fixos, é <strong>${brl(r.valor_hora)}</strong>.</li>`}
-        <li>O preço é multiplicado por <strong>${r.markup_multiplicador.toLocaleString("pt-BR")}</strong> sobre o custo (markup).</li></ul>
-        <p class="fonte">Método do Sebrae. É um ponto de partida: compare com os concorrentes e com o que o seu cliente aceita pagar.</p></div>`;
+        <div class="leg">${seg.map(([k, n, x]) => `<span><i class="${k}"></i>${n}: ${brl(x)}</span>`).join("")}</div>
+        ${prod ? `<p>Vendendo ${num("p-volume").toLocaleString("pt-BR")} por mês, sobra de lucro cerca de <strong>${brl(r.lucro_mensal_estimado)}</strong>, fora o que você já separou para você nos gastos fixos. Dá para dar até ${r.desconto_maximo_pct.toLocaleString("pt-BR")}% de desconto sem prejuízo.</p>` : ""}</details>
+        <p class="fonte">Ponto de partida (método do Sebrae): compare com os concorrentes.</p></div>`;
     } catch (err) { erro($("res-preco"), err); }
   });
 })();

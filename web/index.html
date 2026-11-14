@@ -10,40 +10,40 @@
 <a class="skip" href="#main">Ir para o conteúdo</a>
 <header>
   <h1>MEI sem Medo</h1>
-  <p class="sub">Tire dúvidas e faça as contas do seu negócio, com respostas baseadas em fontes oficiais. <strong>Não somos canal oficial</strong> da Receita, do Sebrae ou do Procon. Não digite dados pessoais.</p>
-  <p><span id="modo" class="badge confirmar">Busca na base verificada</span></p>
-  <p id="voltar-barra" hidden><button type="button" class="voltar" data-aba="perguntar">← Voltar à conversa</button></p>
+  <p class="sub">Pergunte sobre o seu negócio. Respondo com a fonte e digo quando não sei.</p>
+  <p id="voltar-barra" hidden><button type="button" class="voltar" data-aba="perguntar">← Voltar</button></p>
 </header>
 <main id="main">
 
 <section id="tab-perguntar" role="tabpanel">
   <div id="resposta" role="log" aria-live="polite" aria-label="Conversa com o assistente"></div>
-  <div class="chips" id="exemplos" aria-label="Perguntas frequentes"></div>
   <form id="form-pergunta">
-    <label for="pergunta">Pergunte o que quiser sobre o seu negócio</label>
-    <div class="linha"><input id="pergunta" autocomplete="off" maxlength="300" placeholder="Ex.: quero abrir um MEI, por onde começo?"><button type="submit">Enviar</button></div>
-    <button type="button" id="limpar" class="link">Limpar conversa</button>
+    <label for="pergunta" class="sr">Escreva sua pergunta</label>
+    <div class="linha"><input id="pergunta" autocomplete="off" maxlength="300" placeholder="Escreva sua dúvida aqui"><button type="submit">Enviar</button></div>
   </form>
-  <h2 class="sec">Ferramentas</h2>
-  <div class="ferramentas">
-    <button type="button" class="ferr-card destaque" data-aba="preco"><strong>Quanto cobrar?</strong><span>Calcule o preço de venda do seu produto ou serviço</span></button>
-    <button type="button" class="ferr-card" data-aba="mei"><strong>Meu MEI</strong><span>Limite de faturamento, DAS e o que acontece se passar</span></button>
-    <button type="button" class="ferr-card" data-aba="simples"><strong>Simples Nacional</strong><span>Qual é o seu anexo e quanto vai de imposto</span></button>
-    <button type="button" class="ferr-card" data-aba="temas"><strong>Todos os assuntos</strong><span>Navegue pelas orientações da base</span></button>
+  <div class="atalhos" id="atalhos">
+    <button type="button" data-pergunta="Quero abrir um MEI, por onde começo?">Quero abrir um MEI</button>
+    <button type="button" data-aba="preco" class="forte">Quanto cobrar?</button>
+    <button type="button" data-aba="mei">Passei do limite do MEI?</button>
+    <button type="button" data-pergunta="Como emitir nota fiscal?">Como emitir nota fiscal</button>
   </div>
-  <details class="reforma">
-    <summary>Reforma tributária (para quem quer se aprofundar)</summary>
-    <div class="ferramentas">
-      <button type="button" class="ferr-card" data-aba="hibrido"><strong>Simples puro x híbrido</strong><span>Simule 2027 a 2033 mês a mês</span></button>
-      <button type="button" class="ferr-card" data-aba="creditos"><strong>Créditos de IBS/CBS</strong><span>O que seus clientes empresas aproveitam</span></button>
-      <button type="button" class="ferr-card" data-aba="split"><strong>Split payment</strong><span>Veja o imposto saindo na hora do pagamento</span></button>
-    </div>
-  </details>
+  <p class="rodape-links"><button type="button" class="link" data-aba="mais">Mais ferramentas</button> · <button type="button" id="limpar" class="link">Limpar conversa</button></p>
+</section>
+
+<section id="tab-mais" role="tabpanel" hidden>
+  <h2>Mais ferramentas</h2>
+  <div class="lista">
+    <button type="button" class="ferr-card" data-aba="simples"><strong>Simples Nacional</strong><span>Qual é o seu anexo e quanto vai de imposto</span></button>
+    <button type="button" class="ferr-card" data-aba="temas"><strong>Todos os assuntos</strong><span>Navegue pelas orientações</span></button>
+    <button type="button" class="ferr-card" data-aba="hibrido"><strong>Reforma: Simples puro x híbrido</strong><span>Simule 2027 a 2033</span></button>
+    <button type="button" class="ferr-card" data-aba="creditos"><strong>Reforma: créditos de IBS/CBS</strong><span>O que seus clientes empresas aproveitam</span></button>
+    <button type="button" class="ferr-card" data-aba="split"><strong>Reforma: split payment</strong><span>O imposto saindo na hora do pagamento</span></button>
+  </div>
 </section>
 
 <section id="tab-preco" role="tabpanel" hidden>
   <h2>Quanto cobrar? Calculadora de preço</h2>
-  <p>Descubra o preço que paga todas as contas e ainda deixa lucro. Método do Sebrae (markup): o preço cobre o custo, uma parte dos gastos fixos, as taxas, os impostos e o seu lucro.</p>
+  <p>Descubra o preço que paga as contas e ainda deixa lucro (método do Sebrae).</p>
   <fieldset class="modo-preco"><legend>O que você vende?</legend>
     <label class="radio"><input type="radio" name="p-modo" value="produto" checked> Produto</label>
     <label class="radio"><input type="radio" name="p-modo" value="servico"> Serviço</label>
@@ -61,26 +61,30 @@
       <label>Quantas horas leva este serviço?<input id="s-horas-serv" inputmode="decimal" value="2"></label>
       <label>Material gasto neste serviço (R$)<input id="s-material" inputmode="decimal" value="10"></label>
     </div>
-    <label>Taxas sobre a venda (%)<small>Maquininha, aplicativo, comissão. Veja no seu extrato. 0 se não tiver.</small><input id="p-taxas" inputmode="decimal" value="5"></label>
-    <label>Imposto sobre a venda (%)<small>No MEI deixe 0: o DAS é fixo e já está nos gastos fixos.</small><input id="p-imposto" inputmode="decimal" value="0"></label>
-    <label>Lucro que você quer sobre o preço (%)<input id="p-lucro" inputmode="decimal" value="20"></label>
-    <label>Preço que você cobra hoje (R$) <small>opcional, para ver se está dando lucro</small><input id="p-atual" inputmode="decimal" value="40"></label>
+    <label>Preço que você cobra hoje (R$) <small>opcional: para ver se está dando lucro</small><input id="p-atual" inputmode="decimal" value=""></label>
+    <details class="ajustes"><summary>Ajustar taxas, imposto e lucro</summary>
+      <label>Taxas sobre a venda (%)<small>Maquininha, aplicativo, comissão. Veja no seu extrato. 0 se não tiver.</small><input id="p-taxas" inputmode="decimal" value="5"></label>
+      <label>Imposto sobre a venda (%)<small>No MEI deixe 0: o DAS é fixo e já está nos gastos fixos.</small><input id="p-imposto" inputmode="decimal" value="0"></label>
+      <label>Lucro que você quer sobre o preço (%)<input id="p-lucro" inputmode="decimal" value="20"></label>
+    </details>
     <button type="submit">Calcular preço</button>
   </form>
   <div id="res-preco" aria-live="polite"></div>
 </section>
 
 <section id="tab-mei" role="tabpanel" hidden>
-  <h2>Calculadora do MEI</h2>
-  <p>Veja o valor do seu DAS, quanto já usou do limite de <strong>R$ 81.000 por ano</strong> e o que acontece se passar. O MEI paga DAS de valor fixo: não calcula CBS/IBS por conta própria (veja a aba Perguntar).</p>
+  <h2>Passei do limite do MEI?</h2>
+  <p>O limite é de <strong>R$ 81.000 por ano</strong>. Veja onde você está e quanto ainda pode faturar.</p>
   <form id="form-mei" class="grade">
-    <label>Atividade<select id="m-ativ"><option value="comercio">Comércio / indústria</option><option value="servicos">Serviços</option><option value="ambos">Comércio e serviços</option></select></label>
-    <label>Meses de atividade neste ano <small>(12 se abriu antes de janeiro)</small><input id="m-meses" inputmode="numeric" value="12"></label>
-    <label>Faturado no ano até agora, R$<input id="m-fat" inputmode="decimal" value="40000"></label>
-    <label>Meses que faltam até dezembro<input id="m-rest" inputmode="numeric" value="6"></label>
-    <label>Faturamento mensal previsto, R$<input id="m-media" inputmode="decimal" value="6000"></label>
-    <label>Salário mínimo, R$ <small>(base do INSS)</small><input id="m-sm" inputmode="decimal" value="1621"></label>
-    <button type="submit">Calcular</button>
+    <label>O que você faz?<select id="m-ativ"><option value="comercio">Vendo produtos</option><option value="servicos">Presto serviços</option><option value="ambos">As duas coisas</option></select></label>
+    <label>Quanto já faturou neste ano? (R$)<input id="m-fat" inputmode="decimal" value="40000"></label>
+    <label>Quanto espera faturar por mês daqui para frente? (R$)<input id="m-media" inputmode="decimal" value="6000"></label>
+    <details class="ajustes"><summary>Ajustar meses e salário mínimo</summary>
+      <label>Meses de atividade neste ano <small>12 se abriu antes de janeiro</small><input id="m-meses" inputmode="numeric" value="12"></label>
+      <label>Meses que faltam até dezembro<input id="m-rest" inputmode="numeric" value="1"></label>
+      <label>Salário mínimo (R$)<input id="m-sm" inputmode="decimal" value="1621"></label>
+    </details>
+    <button type="submit">Ver minha situação</button>
   </form>
   <div id="res-mei" aria-live="polite"></div>
 </section>
@@ -206,7 +210,7 @@
 
 </main>
 <footer>
-  <p>Base: <span id="n-reg"></span> registros com fonte e data de verificação. As regras da reforma mudam: confirme em canal oficial ou com um contador. Projeto acadêmico (FIAP Global Solution 2026.2).</p>
+  <p><span id="modo" class="badge confirmar">Busca na base verificada</span><br>Não somos canal oficial da Receita, do Sebrae ou do Procon. Não digite dados pessoais. As regras mudam: confirme em canal oficial ou com um contador. <span id="n-reg"></span> orientações com fonte e data. Projeto acadêmico (FIAP Global Solution 2026.2).</p>
 </footer>
 <script src="base.js"></script>
 <script src="motor.js"></script>

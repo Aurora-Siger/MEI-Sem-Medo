@@ -76,3 +76,16 @@ fieldset.modo-preco{border:1px solid var(--bd);border-radius:10px;margin:12px 0;
 .legal{font-size:.88rem;color:var(--mut)}
 @media (min-width:600px){body{font-size:18px}}
 label small{display:block;font-weight:400;color:var(--mut);margin:2px 0 6px;font-size:.88rem}
+
+/* ---- simplificação ---- */
+.sr{position:absolute;left:-9999px}
+header .sub{margin:0 0 6px}
+.atalhos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.atalhos button{background:var(--card);color:var(--fg);border:1px solid var(--bd);border-radius:14px;padding:18px 12px;font:inherit;font-weight:600;cursor:pointer;min-height:72px}
+.atalhos button.forte{background:var(--ac);color:var(--acfg);border-color:var(--ac)}
+.atalhos[hidden]{display:none}
+.rodape-links{text-align:center;margin:10px 0}
+.lista{display:grid;gap:10px}
+details.ajustes{grid-column:1/-1;background:none;border:0;padding:0;margin:6px 0}details.ajustes summary{color:var(--mut);font-weight:400;text-decoration:underline}
+#form-pergunta{margin-top:12px}
+@media (max-width:420px){.atalhos{grid-template-columns:1fr}}
