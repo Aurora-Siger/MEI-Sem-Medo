@@ -4,41 +4,105 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MEI sem Medo</title>
+<link rel="icon" type="image/png" href="img/favicon.png">
 <link rel="stylesheet" href="style.css">
+<script>try{var t=localStorage.getItem("mei-sem-medo:tema");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
 <body>
 <a class="skip" href="#main">Ir para o conteúdo</a>
-<header>
-  <h1>MEI sem Medo</h1>
-  <p class="sub">Dúvidas e contas de quem tem um negócio pequeno, com a fonte de cada resposta. Se eu não souber, digo.</p>
-  <p id="voltar-barra" hidden><button type="button" class="voltar" data-aba="perguntar">← Voltar</button></p>
+<header class="topo">
+  <div class="topo-in">
+    <button type="button" class="marca" data-aba="perguntar" aria-label="MEI sem Medo, início"><img class="t-claro" src="img/logo-claro.png" alt="MEI sem Medo, Citizen Assist AI"><img class="t-escuro" src="img/logo-escuro.png" alt="MEI sem Medo, Citizen Assist AI"></button>
+    <div class="topo-acoes">
+      <button type="button" id="abrir-menu" class="pilula" aria-expanded="false" aria-controls="menu">Ferramentas <span aria-hidden="true">▾</span></button>
+      <button type="button" id="tema" class="pilula" aria-label="Alternar tema claro e escuro" title="Claro / escuro">◐</button>
+      <button type="button" id="abrir-ia" class="pilula" aria-label="Configurar assistente de IA"><span id="modo" class="confirmar">Sem IA</span></button>
+    </div>
+  </div>
+  <nav id="menu" class="menu" aria-label="Ferramentas" hidden>
+    <button type="button" data-aba="perguntar">Conversar</button>
+    <button type="button" data-aba="preco">Quanto cobrar</button>
+    <button type="button" data-aba="mei">Meu limite e DAS</button>
+    <button type="button" data-aba="simples">Simples Nacional</button>
+    <button type="button" data-aba="hibrido">Reforma: puro x híbrido</button>
+    <button type="button" data-aba="creditos">Reforma: créditos</button>
+    <button type="button" data-aba="split">Reforma: split payment</button>
+    <button type="button" data-aba="temas">Todos os assuntos</button>
+  </nav>
 </header>
 <main id="main">
 
 <section id="tab-perguntar" role="tabpanel">
+  <div id="landing" class="hero">
+    <h1>Preço, imposto e reforma tributária, <span>sem complicação</span>.</h1>
+    <p class="sub">Ajuda para quem tem um negócio pequeno: dúvidas, contas e o que muda para MEI e Simples. Toda resposta vem com a fonte.</p>
+  </div>
   <div id="resposta" role="log" aria-live="polite" aria-label="Conversa com o assistente"></div>
   <form id="form-pergunta">
     <label for="pergunta" class="sr">Escreva sua pergunta</label>
-    <div class="linha"><input id="pergunta" autocomplete="off" maxlength="300" placeholder="Escreva sua dúvida aqui"><button type="submit">Enviar</button></div>
+    <div class="linha"><input id="pergunta" autocomplete="off" maxlength="300" placeholder="Escreva sua dúvida" autofocus><button type="submit" aria-label="Perguntar">→</button></div>
   </form>
-  <div class="atalhos" id="atalhos">
-    <button type="button" data-pergunta="Quero abrir um MEI, por onde começo?">Quero abrir meu MEI</button>
-    <button type="button" data-aba="preco" class="forte">Quanto cobrar?</button>
-    <button type="button" data-aba="mei">Será que passei do limite?</button>
-    <button type="button" data-pergunta="Como emitir nota fiscal?">Como emitir nota fiscal</button>
+  <div id="landing2">
+    <div class="atalhos" id="atalhos">
+      <button type="button" data-aba="preco">Quanto cobrar?</button>
+      <button type="button" data-pergunta="O que muda para o MEI com a reforma tributária?">O que muda com a reforma?</button>
+      <button type="button" data-pergunta="Como emitir nota fiscal?">Nota fiscal</button>
+      <button type="button" data-pergunta="Quero abrir um MEI, por onde começo?">Abrir MEI</button>
+    </div>
+    <h2 class="sec">Veja na prática</h2>
+    <div class="demos">
+      <div class="demo demo-chat" role="group" aria-label="Conversa com o assistente">
+        <span class="demo-img"><img class="t-claro" src="img/conversa-claro.png" alt="" loading="lazy" width="720"><img class="t-escuro" src="img/conversa-escuro.png" alt="" loading="lazy" width="720"></span>
+        <b>Converse com o assistente</b><span>Pergunte do seu jeito. A resposta traz a fonte, a base legal e avisa quando a regra pode mudar.</span>
+      </div>
+      <button type="button" class="demo" data-aba="preco">
+        <span class="demo-img"><img class="t-claro" src="img/preco-claro.png" alt="" loading="lazy" width="720"><img class="t-escuro" src="img/preco-escuro.png" alt="" loading="lazy" width="720"></span>
+        <b>Quanto cobrar</b><span>Monte o custo pelos componentes e descubra o preço com lucro.</span>
+      </button>
+      <button type="button" class="demo" data-aba="mei">
+        <span class="demo-img"><img class="t-claro" src="img/mei-claro.png" alt="" loading="lazy" width="720"><img class="t-escuro" src="img/mei-escuro.png" alt="" loading="lazy" width="720"></span>
+        <b>Meu limite e DAS</b><span>Veja quanto já usou dos R$ 81 mil e o que acontece se passar.</span>
+      </button>
+      <button type="button" class="demo" data-aba="simples">
+        <span class="demo-img"><img class="t-claro" src="img/simples-claro.png" alt="" loading="lazy" width="720"><img class="t-escuro" src="img/simples-escuro.png" alt="" loading="lazy" width="720"></span>
+        <b>Simples Nacional</b><span>Anexos, faixas e o DAS com alíquota efetiva e Fator R.</span>
+      </button>
+      <button type="button" class="demo" data-aba="hibrido">
+        <span class="demo-img"><img class="t-claro" src="img/reforma-claro.png" alt="" loading="lazy" width="720"><img class="t-escuro" src="img/reforma-escuro.png" alt="" loading="lazy" width="720"></span>
+        <b>Reforma: puro x híbrido</b><span>Compare o imposto de 2027 a 2033, mês a mês.</span>
+      </button>
+      <button type="button" class="demo" data-aba="creditos">
+        <span class="demo-img"><img class="t-claro" src="img/creditos-claro.png" alt="" loading="lazy" width="720"><img class="t-escuro" src="img/creditos-escuro.png" alt="" loading="lazy" width="720"></span>
+        <b>Reforma: créditos de IBS/CBS</b><span>O crédito que seus clientes empresas deixam de receber.</span>
+      </button>
+      <button type="button" class="demo" data-aba="split">
+        <span class="demo-img"><img class="t-claro" src="img/split-claro.png" alt="" loading="lazy" width="720"><img class="t-escuro" src="img/split-escuro.png" alt="" loading="lazy" width="720"></span>
+        <b>Reforma: split payment</b><span>O imposto saindo na hora do pagamento, na prática.</span>
+      </button>
+    </div>
+    <h2 class="sec">O projeto</h2>
+    <div class="projeto">
+      <span class="logo-grande"><img class="t-claro" src="img/logo-claro.png" alt="MEI sem Medo, Citizen Assist AI" loading="lazy"><img class="t-escuro" src="img/logo-escuro.png" alt="MEI sem Medo, Citizen Assist AI" loading="lazy"></span>
+      <p>O <strong>MEI sem Medo</strong> é o nosso protótipo do desafio <em>Citizen Assist AI</em> (FIAP Global Solution 2026.2): um assistente que organiza informações verificadas para quem tem negócio pequeno, cita a fonte de cada resposta e avisa quando não sabe.</p>
+      <ul class="numeros">
+        <li><b>48</b><span>orientações com fonte e data</span></li>
+        <li><b>12</b><span>ferramentas que a IA usa</span></li>
+        <li><b>9</b><span>temas, do MEI à reforma</span></li>
+        <li><b>44</b><span>perguntas de teste</span></li>
+      </ul>
+      <ul class="principios">
+        <li>Toda resposta traz a fonte e a data de conferência.</li>
+        <li>Fora da base, diz que não sabe e indica onde confirmar.</li>
+        <li>Não pede dados pessoais e não é canal oficial.</li>
+      </ul>
+    </div>
   </div>
-  <p class="rodape-links"><button type="button" class="link" data-aba="mais">Mais ferramentas</button> · <button type="button" id="limpar" class="link">Limpar conversa</button></p>
+  <p class="rodape-links"><button type="button" id="limpar" class="link" hidden>Nova conversa</button></p>
 </section>
 
-<section id="tab-mais" role="tabpanel" hidden>
-  <h2>Mais ferramentas</h2>
-  <div class="lista">
-    <button type="button" class="ferr-card" data-aba="simples"><strong>Simples Nacional</strong><span>Qual é o seu anexo e quanto vai de imposto</span></button>
-    <button type="button" class="ferr-card" data-aba="temas"><strong>Todos os assuntos</strong><span>Navegue pelas orientações</span></button>
-    <button type="button" class="ferr-card" data-aba="hibrido"><strong>Reforma: Simples puro x híbrido</strong><span>Simule 2027 a 2033</span></button>
-    <button type="button" class="ferr-card" data-aba="creditos"><strong>Reforma: créditos de IBS/CBS</strong><span>O que seus clientes empresas aproveitam</span></button>
-    <button type="button" class="ferr-card" data-aba="split"><strong>Reforma: split payment</strong><span>O imposto saindo na hora do pagamento</span></button>
-  </div>
+<section id="tab-temas" role="tabpanel" hidden>
+  <h2>Escolha um tema</h2>
+  <div id="lista-temas"></div>
 </section>
 
 <section id="tab-preco" role="tabpanel" hidden>
@@ -50,7 +114,16 @@
   </fieldset>
   <form id="form-preco" class="grade">
     <div id="p-produto" class="grupo">
-      <label>Quanto custa, para você, cada unidade? (R$)<small>Mercadoria, matéria-prima e embalagem de uma unidade.</small><input id="p-custo" inputmode="decimal" value="20"></label>
+      <label class="largo">Qual produto você vende?<input id="p-nome" maxlength="60" placeholder="Ex.: bolo de pote, camiseta, vela aromática" autocomplete="off"></label>
+      <fieldset class="comp largo"><legend>Do que ele é feito? Custo de cada unidade</legend>
+        <p class="fonte">Liste os componentes: ingrediente, matéria-prima, embalagem, etiqueta. Informe quanto pagou e quantas unidades aquilo rende.</p>
+        <div id="p-comps"></div>
+        <div class="acoes"><button type="button" id="p-addcomp">+ Adicionar componente</button></div>
+        <p class="comp-total">Custo por unidade: <strong id="p-custo-total">R$ 0,00</strong></p>
+        <label class="radio"><input type="checkbox" id="p-direto"> Já sei o custo total de cada unidade</label>
+        <label id="p-direto-wrap" hidden>Custo de cada unidade (R$)<input id="p-custo-direto" inputmode="decimal" value="20"></label>
+        <input id="p-custo" type="hidden" value="20">
+      </fieldset>
       <label>Gastos fixos do mês (R$)<small>Aluguel, internet, luz, o DAS do MEI (de R$ 82,05 a R$ 87,05) e <strong>quanto você quer tirar para você</strong>.</small><input id="p-fixos" inputmode="decimal" value="1500"></label>
       <label>Quantas unidades você vende por mês?<input id="p-volume" inputmode="numeric" value="100"></label>
     </div>
@@ -87,11 +160,6 @@
     <button type="submit">Ver minha situação </button>
   </form>
   <div id="res-mei" aria-live="polite"></div>
-</section>
-
-<section id="tab-temas" role="tabpanel" hidden>
-  <h2>Escolha um tema</h2>
-  <div id="lista-temas"></div>
 </section>
 
 <section id="tab-simples" role="tabpanel" hidden>
@@ -210,8 +278,19 @@
 
 </main>
 <footer>
-  <p><span id="modo" class="badge confirmar">Busca na base verificada</span><br>Não somos canal oficial da Receita, do Sebrae ou do Procon. Não digite dados pessoais. As regras mudam: confirme em canal oficial ou com um contador. <span id="n-reg"></span> orientações com fonte e data. Projeto da FIAP Global Solution 2026.2.</p>
+  <p>Não somos canal oficial da Receita, do Sebrae ou do Procon. Não digite dados pessoais. Confirme com um contador. <span id="n-reg"></span> orientações com fonte e data · FIAP Global Solution 2026.2</p>
 </footer>
+<dialog id="dlg-ia" aria-labelledby="dlg-titulo">
+  <form method="dialog" id="form-ia">
+    <h2 id="dlg-titulo">Assistente de IA</h2>
+    <p>Cole sua chave de API para o assistente responder com inteligência artificial. Sem chave, o site continua funcionando com a busca na base verificada.</p>
+    <label id="ia-prov-wrap">Provedor<select id="ia-prov"><option value="gemini">Google Gemini</option><option value="claude">Claude (Anthropic)</option></select></label>
+    <label for="ia-chave">Chave de API<small id="ia-ajuda">Gemini: crie em aistudio.google.com/apikey</small><input id="ia-chave" type="password" autocomplete="off" spellcheck="false" placeholder="Cole a chave aqui"></label>
+    <p class="fonte" id="ia-aviso">A chave fica só neste navegador (localStorage) e nunca vai para o GitHub. Não use em computador compartilhado.</p>
+    <p id="ia-msg" class="fonte" aria-live="polite"></p>
+    <div class="acoes"><button type="submit" value="salvar" id="ia-salvar" class="primario">Salvar</button><button type="button" id="ia-remover">Remover chave</button><button type="submit" value="fechar">Fechar</button></div>
+  </form>
+</dialog>
 <script src="base.js"></script>
 <script src="motor.js"></script>
 <script src="app.js"></script>

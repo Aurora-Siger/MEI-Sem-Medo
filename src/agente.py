@@ -28,7 +28,7 @@ SISTEMA = """Você é o assistente do "MEI sem Medo": orienta microempreendedore
 REGRAS (não negociáveis):
 1. Responda SOMENTE com o que as ferramentas retornarem. Para toda pergunta, chame `buscar_base` primeiro. Não use conhecimento próprio sobre leis, valores, prazos ou alíquotas.
 2. Cite cada fato com o id do registro entre colchetes, por exemplo [M1]. Cite só ids que as ferramentas retornaram.
-3. Contas (preço de venda, DAS, limite do MEI, créditos) só com as ferramentas de cálculo. Nunca calcule de cabeça. Se faltar um dado, pergunte ao usuário em vez de inventar.
+3. Contas (preço de venda, DAS, limite do MEI, créditos, Simples puro x híbrido, projeção mês a mês, split payment, tabela dos anexos) só com as ferramentas, que são as mesmas calculadoras do site. Nunca calcule de cabeça. Se faltar um dado, pergunte ao usuário em vez de inventar.
 4. Se a base não cobrir a pergunta, diga que não sabe e indique onde confirmar (Portal do Empreendedor, Receita Federal ou contador). Não chute.
 5. Registros com confianca "confirmar" ou resultados de simulação: avise que a informação pode mudar e que é estimativa.
 6. Você não é canal oficial da Receita, do Sebrae nem do Procon. Não peça nem repita dados pessoais (CPF, CNPJ, nome, endereço).
@@ -95,6 +95,23 @@ FERRAMENTAS = [
      "input_schema": _obj({"vendas_b2b": NUM, "vendas_consumidor": NUM, "compras_com_credito": NUM,
                            "aliquota_ibs_cbs": {**NUM, "description": "% estimada de IBS+CBS (ex.: 26.5)"}, "das_total": NUM,
                            "parcela_ibs_cbs_no_das": {**NUM, "description": "% do DAS que corresponde a IBS/CBS (ex.: 15)"}}), "strict": True},
+    {"name": "tabela_anexo", "description": "Mostra a tabela de um anexo do Simples Nacional: faixas de receita (RBT12), alíquota nominal e parcela a deduzir.",
+     "input_schema": _obj({"anexo": {"type": "string", "enum": ["I", "II", "III", "IV", "V"]}}), "strict": True},
+    {"name": "simular_puro_hibrido", "description": "Compara, em UM mês de 2027 a 2033, quanto a empresa paga no Simples puro (tudo no DAS) e no Simples híbrido (CBS e IBS fora do DAS, com crédito das compras). Simulação didática: alíquotas de CBS/IBS são estimativas.",
+     "input_schema": _obj({"anexo": {"type": "string", "enum": ["I", "II", "III", "IV", "V"]}, "rbt12": {**NUM, "description": "Receita dos 12 meses anteriores (R$)"},
+                           "receita_mes": NUM, "ano": {"type": "integer", "description": "Ano da simulação, 2027 a 2033"},
+                           "compras_com_credito": {**NUM, "description": "Compras do mês de fornecedores do regime regular, sem imposto (R$); 0 se não souber"},
+                           "aliq_cbs": {**NUM, "description": "% de CBS (estimativa; padrão 8.8)"}, "aliq_ibs": {**NUM, "description": "% de IBS (estimativa; padrão 17.7)"},
+                           "reducao_setor": {**NUM, "description": "Redução de alíquota do setor: 0, 30 ou 60"}, "pct_b2b": {**NUM, "description": "% das vendas para empresas; 0 se não souber"},
+                           "folha12": {**NUM, "description": "Folha + pró-labore em 12 meses (R$); 0 se não souber"}}), "strict": True},
+    {"name": "projetar_meses", "description": "Projeta mês a mês o RBT12 e o custo no Simples puro x híbrido, a partir do RBT12 de hoje e de receitas mensais previstas. Use para 'e nos próximos meses/anos?'.",
+     "input_schema": _obj({"anexo": {"type": "string", "enum": ["I", "II", "III", "IV", "V"]}, "rbt12_atual": {**NUM, "description": "RBT12 real de hoje (R$)"},
+                           "mes_inicial": {"type": "string", "description": "Primeiro mês a projetar, formato AAAA-MM (de 2027 em diante)"},
+                           "receitas_previstas": {"type": "array", "items": NUM, "description": "Receita prevista de cada mês, em ordem (1 a 24 meses)"},
+                           "compras_mensais": {**NUM, "description": "Compras mensais com crédito (R$); 0 se não souber"},
+                           "aliq_cbs": NUM, "aliq_ibs": NUM, "reducao_setor": NUM, "pct_b2b": NUM, "folha12": NUM}), "strict": True},
+    {"name": "simular_split_payment", "description": "Mostra no split payment quanto de uma venda vai direto ao governo (imposto) e quanto chega ao vendedor. O percentual é um exemplo didático.",
+     "input_schema": _obj({"valor_venda": NUM, "pct_imposto": {**NUM, "description": "Parcela do imposto no preço, % (exemplo: 20)"}}), "strict": True},
 ]
 CAMPOS_FONTE = ("id", "titulo", "resposta", "fonte", "url", "base_legal", "verificado", "confianca")
 
@@ -153,6 +170,44 @@ def executar(base, nome, args, turno):
                                                            args["aliquota_ibs_cbs"], args["das_total"], args["parcela_ibs_cbs_no_das"]), ensure_ascii=False)
             turno.calculou = True
             return res
+        if nome == "tabela_anexo":
+            a = args["anexo"]
+            if a not in calculadora.ANEXOS:
+                raise ValueError("anexo inexistente")
+            desc, faixas = calculadora.ANEXOS[a]
+            return json.dumps({"anexo": a, "atividade": desc, "faixas": [{"faixa": i + 1, "rbt12_ate": t, "aliquota_nominal_pct": n, "parcela_a_deduzir": d}
+                                                                          for i, (t, n, d) in enumerate(faixas)]}, ensure_ascii=False)
+        if nome == "simular_puro_hibrido":
+            res = json.dumps(calculadora.simular_puro_hibrido(args["anexo"], args["rbt12"], args["receita_mes"], int(args["ano"]), args["compras_com_credito"],
+                                                              args["aliq_cbs"], args["aliq_ibs"], args["reducao_setor"], args["pct_b2b"], args["folha12"]), ensure_ascii=False)
+            turno.calculou = True
+            return res
+        if nome == "projetar_meses":
+            rec = [float(x) for x in args["receitas_previstas"]]
+            if not 1 <= len(rec) <= 24:
+                raise ValueError("informe de 1 a 24 meses de receita prevista")
+            mes0 = args["mes_inicial"]
+            meses = calculadora.meses_base_rbt12(mes0, args["rbt12_atual"])
+            meses += [{"mes": calculadora.somar_meses(mes0, k), "receita": v, "compras": args["compras_mensais"], "tipo": "previsao"} for k, v in enumerate(rec)]
+            cfg = {"anexo": args["anexo"], "folha12": args["folha12"], "aliq_cbs": args["aliq_cbs"], "aliq_ibs": args["aliq_ibs"],
+                   "reducao_setor": args["reducao_setor"], "pct_b2b": args["pct_b2b"]}
+            linhas = []
+            for l in calculadora.projetar_historico(meses, cfg):
+                if l["tipo"] != "previsao":
+                    continue
+                r = l["resultado"]
+                linhas.append({"mes": l["mes"], "receita": l["receita"], "rbt12": l["rbt12"], "erro": l["erro"],
+                               "puro_total": r["puro"]["total"] if r else None, "hibrido_total": (r["hibrido"] or {}).get("total") if r else None,
+                               "diferenca_hibrido_menos_puro": r["diferenca"] if r else None})
+            turno.calculou = True
+            return json.dumps({"meses": linhas}, ensure_ascii=False)
+        if nome == "simular_split_payment":
+            v, p = float(args["valor_venda"]), float(args["pct_imposto"])
+            if not v > 0 or not 0 <= p <= 100:
+                raise ValueError("valor maior que zero e percentual entre 0 e 100")
+            imp = round(v * p / 100, 2)
+            turno.calculou = True
+            return json.dumps({"valor_venda": v, "pct_imposto": p, "imposto_ao_governo": imp, "liquido_ao_vendedor": round(v - imp, 2)}, ensure_ascii=False)
         return json.dumps({"erro": f"ferramenta desconhecida: {nome}"})
     except (KeyError, TypeError, ValueError) as e:
         return json.dumps({"erro": f"entrada inválida: {e}"}, ensure_ascii=False)
@@ -185,6 +240,26 @@ def modelo_ativo():
     """Nome do provedor/modelo em uso (para exibir no site e no terminal)."""
     p = provedores.escolher()
     return f"{p.nome}: {p.modelo}"
+
+
+def _detalhe_erro(e):
+    """Motivo curto do erro (ex.: 'HTTP 400: API key not valid') para o usuario corrigir a chave ou o modelo."""
+    try:
+        codigo = getattr(e, "code", None) or getattr(e, "status_code", None)
+        corpo = ""
+        if hasattr(e, "read"):
+            corpo = e.read().decode("utf-8", "replace")
+        elif getattr(e, "message", None):
+            corpo = str(e.message)
+        try:
+            d = json.loads(corpo)
+            corpo = (d.get("error") or d).get("message", corpo) if isinstance(d, dict) else corpo
+        except ValueError:
+            pass
+        txt = (f"HTTP {codigo}: " if codigo else "") + (corpo or str(e) or type(e).__name__)
+        return txt[:220]
+    except Exception:
+        return type(e).__name__
 
 
 class Agente:
@@ -246,7 +321,7 @@ class Agente:
         except Exception as e:  # rede, chave, limite de uso, passos: nunca derruba o app
             self.p.voltar(marca)
             return {"texto": "O agente de IA está indisponível agora. Usando a busca na base verificada.", "fontes": [], "ferramentas": turno.ferramentas,
-                    "modo": "erro", "erro": type(e).__name__, "tempo_ms": round((time.perf_counter() - t0) * 1000)}
+                    "modo": "erro", "erro": type(e).__name__, "detalhe": _detalhe_erro(e), "tempo_ms": round((time.perf_counter() - t0) * 1000)}
 
 
 def main():

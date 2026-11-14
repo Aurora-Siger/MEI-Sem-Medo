@@ -215,5 +215,20 @@ for k, v in guarda.items():
     if v is not None:
         os.environ[k] = v
 
+# ---- todas as calculadoras do site estao disponiveis como ferramentas do agente ----
+_b = sistema.carregar()
+_ex = lambda n, **a: json.loads(agente.executar(_b, n, a, agente.Turno()))
+_t = _ex("tabela_anexo", anexo="III")
+ok(len(_t["faixas"]) == 6, "ferramenta tabela_anexo")
+_h = _ex("simular_puro_hibrido", anexo="III", rbt12=300000, receita_mes=30000, ano=2029, compras_com_credito=8000, aliq_cbs=8.8, aliq_ibs=17.7, reducao_setor=0, pct_b2b=0, folha12=0)
+ok(_h["puro"]["total"] > 0 and _h["hibrido"]["total"] > 0, "ferramenta simular_puro_hibrido")
+_p = _ex("projetar_meses", anexo="III", rbt12_atual=300000, mes_inicial="2027-01", receitas_previstas=[25000, 26000], compras_mensais=0, aliq_cbs=8.8, aliq_ibs=17.7, reducao_setor=0, pct_b2b=0, folha12=0)
+ok(len(_p["meses"]) == 2 and _p["meses"][0]["rbt12"] == 300000, "ferramenta projetar_meses")
+_s = _ex("simular_split_payment", valor_venda=1000, pct_imposto=20)
+ok(_s["liquido_ao_vendedor"] == 800 and _s["imposto_ao_governo"] == 200, "ferramenta simular_split_payment")
+ok("erro" in _ex("simular_split_payment", valor_venda=-1, pct_imposto=20), "split recusa valor invalido")
+ok(all(f["name"] in {"buscar_base", "obter_registro", "listar_temas", "calcular_das", "analisar_mei", "formar_preco_produto", "formar_preco_servico",
+                     "simular_creditos", "tabela_anexo", "simular_puro_hibrido", "projetar_meses", "simular_split_payment"} for f in agente.FERRAMENTAS), "12 ferramentas declaradas")
+
 print(f"\nAgente: {'tudo OK' if not falhas else str(falhas) + ' falha(s)'}")
 sys.exit(1 if falhas else 0)

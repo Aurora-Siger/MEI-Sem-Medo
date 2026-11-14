@@ -124,7 +124,7 @@ class ProvedorGemini:
 
     def __init__(self, transporte=None, modelo=None, chave=None):
         self.transporte = transporte or transporte_http
-        self.modelo = modelo or os.environ.get("GEMINI_MODELO") or os.environ.get("MEI_MODELO") or "gemini-2.5-flash"
+        self.modelo = modelo or os.environ.get("GEMINI_MODELO") or os.environ.get("MEI_MODELO") or "gemini-3.8-flash"
         self._chave = chave
         self.mensagens = []   # 'contents' do Gemini
 
