@@ -4,6 +4,7 @@ Sao SIMULACOES didaticas. As aliquotas de IBS/CBS e a regulamentacao do Simples 
 estao em definicao; todo parametro estimado e editavel e deve ser confirmado.
 Uso: python src/calculadora.py
 """
+import math
 
 # Tabelas do Simples Nacional (LC 123/2006, anexos I a V): (limite da faixa de RBT12, aliquota nominal %, parcela a deduzir)
 ANEXOS = {
@@ -86,6 +87,196 @@ def simular_creditos(vendas_b2b, vendas_consumidor, compras_com_credito, aliquot
             "credito_compras_nao_aproveitado": credito_compras}
 
 
+# ---------------------------------------------------------------------------------------------
+# Simples puro x Simples hibrido (a partir de 2027)
+# Puro: tudo continua no DAS. Hibrido: a CBS (no lugar de PIS/Cofins) e o IBS (no lugar de ICMS/ISS)
+# saem do DAS e sao pagos a parte, com debito sobre as vendas e credito das compras.
+# ---------------------------------------------------------------------------------------------
+
+# Reparticao dos tributos dentro do DAS (LC 123/2006, anexos I a V), em % do DAS, por faixa:
+# (Cofins, PIS, ICMS ou ISS). O restante (IRPJ, CSLL, CPP, IPI) fica no DAS nos dois regimes.
+# Na 6a faixa o ICMS/ISS ja e recolhido fora do Simples (sublimite de R$ 3,6 milhoes).
+REPARTICAO = {
+    "I": [(12.74, 2.76, 34.0), (12.74, 2.76, 34.0), (12.74, 2.76, 33.5), (12.74, 2.76, 33.5), (12.74, 2.76, 33.5), (28.27, 6.13, 0.0)],
+    "II": [(11.51, 2.49, 32.0)] * 5 + [(20.96, 4.54, 0.0)],
+    "III": [(12.82, 2.78, 33.5), (14.05, 3.05, 32.0), (13.64, 2.96, 32.5), (13.64, 2.96, 32.5), (12.82, 2.78, 33.5), (16.03, 3.47, 0.0)],
+    "IV": [(17.67, 3.83, 44.5), (20.55, 4.45, 40.0), (19.73, 4.27, 40.0), (18.90, 4.10, 40.0), (18.08, 3.92, 40.0), (20.55, 4.45, 0.0)],
+    "V": [(14.10, 3.05, 14.0), (14.10, 3.05, 17.0), (14.92, 3.23, 19.0), (15.74, 3.41, 21.0), (14.10, 3.05, 23.5), (16.44, 3.56, 0.0)],
+}
+ANEXOS_COM_ISS = ("III", "IV", "V")
+ISS_MAXIMO = 0.05  # LC 123: ISS efetivo de no maximo 5%; a diferenca vai, proporcionalmente, aos tributos federais
+ANO_INICIO_HIBRIDO = 2027
+CONFIG_PADRAO = {"anexo": "III", "folha12": 0.0, "aliq_cbs": 8.8, "aliq_ibs": 17.7, "reducao_setor": 0.0, "pct_b2b": 0.0}
+
+
+def _r2(x):
+    """Arredonda para centavos igual ao Math.round do JavaScript (paridade com web/motor.js)."""
+    return math.floor(x * 100 + 0.5) / 100
+
+
+def regras_ano(ano):
+    """Regras de transicao (EC 132/2023 e LC 214/2025) usadas na simulacao. None antes de 2027 (nao ha CBS/IBS).
+
+    reducao_cbs: pontos a menos na CBS (2027-2028, compensando o IBS de teste).
+    ibs_fixo:    aliquota de teste do IBS em 2027-2028 (0,05% estadual + 0,05% municipal).
+    fracao_ibs:  parte do ICMS/ISS ja convertida em IBS (sobe 10% ao ano de 2029 a 2032; 100% em 2033).
+    """
+    if ano < ANO_INICIO_HIBRIDO:
+        return None
+    if ano <= 2028:
+        return {"reducao_cbs": 0.1, "ibs_fixo": 0.1, "fracao_ibs": 0.0}
+    if ano <= 2032:
+        return {"reducao_cbs": 0.0, "ibs_fixo": None, "fracao_ibs": (ano - 2028) / 10}
+    return {"reducao_cbs": 0.0, "ibs_fixo": None, "fracao_ibs": 1.0}
+
+
+def parcelas_do_das(anexo, faixa, aliquota_efetiva):
+    """Fracao do DAS que e PIS+Cofins (vira CBS) e ICMS/ISS (vira IBS), com o teto de 5% de ISS."""
+    cofins, pis, icms_iss = REPARTICAO[anexo][faixa - 1]
+    p_cbs, p_ibs = (cofins + pis) / 100, icms_iss / 100
+    if anexo in ANEXOS_COM_ISS and aliquota_efetiva * p_ibs > ISS_MAXIMO:
+        novo = ISS_MAXIMO / aliquota_efetiva
+        p_cbs = p_cbs * (1 - novo) / (1 - p_ibs)
+        p_ibs = novo
+    return p_cbs, p_ibs
+
+
+def simular_puro_hibrido(anexo, rbt12, receita_mes, ano, compras_com_credito=0.0, aliq_cbs=8.8, aliq_ibs=17.7,
+                         reducao_setor=0.0, pct_b2b=0.0, folha12=0.0, saldo_credor=0.0):
+    """Quanto a empresa paga no mes no Simples puro e no Simples hibrido (SIMULACAO didatica).
+
+    compras_com_credito: compras do mes de fornecedores do regime regular, sem imposto (geram credito no hibrido).
+    aliq_cbs, aliq_ibs:  aliquotas cheias de referencia, em % (ESTIMATIVAS editaveis).
+    reducao_setor:       reducao da aliquota do setor, em % (0, 30 ou 60). Vale para as vendas, nao para as compras.
+    pct_b2b:             % das vendas para empresas (so muda o credito que o cliente recebe).
+    saldo_credor:        credito de IBS/CBS que sobrou de meses anteriores (abate o que pagar no hibrido).
+    """
+    for nome, v in (("A receita do mês", receita_mes), ("As compras com crédito", compras_com_credito),
+                    ("A folha de salários", folha12), ("O saldo credor", saldo_credor)):
+        if v < 0:
+            raise ValueError(f"{nome} não pode ser negativa.")
+    for nome, v in (("A alíquota da CBS", aliq_cbs), ("A alíquota do IBS", aliq_ibs),
+                    ("A redução do setor", reducao_setor), ("O percentual de vendas B2B", pct_b2b)):
+        if not 0 <= v <= 100:
+            raise ValueError(f"{nome} deve estar entre 0 e 100%.")
+    base = calcular_das(anexo, rbt12, receita_mes, folha12)
+    das = base["das"]
+    p_cbs, p_ibs = parcelas_do_das(base["anexo"], base["faixa"], base["aliquota_efetiva"])
+    regra = regras_ano(int(ano))
+    res = {**base, "ano": int(ano), "rbt12": rbt12, "parcela_pis_cofins": p_cbs, "parcela_icms_iss": p_ibs, "regra": regra}
+    b2b = pct_b2b / 100
+    if regra is None:  # antes de 2027: so existe o Simples de hoje
+        res.update(puro={"das": das, "cbs_no_das": 0.0, "ibs_no_das": 0.0, "credito_cliente_b2b": 0.0, "total": das},
+                   hibrido=None, diferenca=None)
+        return res
+    cbs_no_das = _r2(das * p_cbs)
+    ibs_no_das = _r2(das * p_ibs * regra["fracao_ibs"])
+    puro = {"das": das, "cbs_no_das": cbs_no_das, "ibs_no_das": ibs_no_das,
+            "credito_cliente_b2b": _r2((cbs_no_das + ibs_no_das) * b2b), "total": das}
+    cbs_cheia = max(0.0, aliq_cbs - regra["reducao_cbs"])
+    ibs_cheia = regra["ibs_fixo"] if regra["ibs_fixo"] is not None else aliq_ibs * regra["fracao_ibs"]
+    fator = 1 - reducao_setor / 100
+    cbs_venda = _r2(receita_mes * cbs_cheia * fator / 100)
+    ibs_venda = _r2(receita_mes * ibs_cheia * fator / 100)
+    debito = _r2(cbs_venda + ibs_venda)
+    credito = _r2(compras_com_credito * (cbs_cheia + ibs_cheia) / 100)
+    disponivel = _r2(credito + saldo_credor)
+    das_h = _r2(das - cbs_no_das - ibs_no_das)
+    a_pagar = _r2(max(0.0, debito - disponivel))
+    hibrido = {"das": das_h, "aliq_cbs": cbs_cheia * fator, "aliq_ibs": ibs_cheia * fator,
+               "cbs_vendas": cbs_venda, "ibs_vendas": ibs_venda, "debito": debito, "credito_compras": credito,
+               "saldo_credor_anterior": _r2(saldo_credor), "ibs_cbs_a_pagar": a_pagar,
+               "saldo_credor_final": _r2(max(0.0, disponivel - debito)),
+               "credito_cliente_b2b": _r2(receita_mes * b2b * (cbs_cheia + ibs_cheia) * fator / 100),
+               "total": _r2(das_h + a_pagar)}
+    res.update(puro=puro, hibrido=hibrido, diferenca=_r2(hibrido["total"] - puro["total"]))
+    return res
+
+
+# ----- Historico mes a mes do RBT12 -----
+
+def _mes_idx(mes):
+    """'2026-11' -> indice de mes (ano*12 + mes-1). Levanta ValueError se invalido."""
+    try:
+        ano, m = (int(x) for x in str(mes).split("-"))
+    except ValueError:
+        raise ValueError(f"Mês inválido: {mes!r}. Use o formato AAAA-MM, por exemplo 2026-11.") from None
+    if not (2000 <= ano <= 2100 and 1 <= m <= 12):
+        raise ValueError(f"Mês inválido: {mes!r}. Use o formato AAAA-MM, por exemplo 2026-11.")
+    return ano * 12 + m - 1
+
+
+def somar_meses(mes, n):
+    i = _mes_idx(mes) + n
+    return f"{i // 12:04d}-{i % 12 + 1:02d}"
+
+
+def meses_base_rbt12(mes_referencia, rbt12):
+    """Quando so se sabe o RBT12 total: cria os 12 meses anteriores a mes_referencia com a media (RBT12 / 12)."""
+    if not rbt12 > 0:
+        raise ValueError("Informe um RBT12 maior que zero.")
+    media = _r2(rbt12 / 12)
+    meses = [{"mes": somar_meses(mes_referencia, k - 12), "receita": media, "compras": 0.0, "tipo": "media"} for k in range(12)]
+    meses[-1]["receita"] = _r2(rbt12 - media * 11)  # a soma fecha exatamente no RBT12 informado
+    return meses
+
+
+def projetar_historico(meses, config=None):
+    """Calcula, mes a mes, o RBT12 (soma dos 12 meses anteriores) e o puro x hibrido de cada mes.
+
+    meses:  lista de {"mes": "AAAA-MM", "receita": R$, "compras": R$ (opcional), "tipo": "real"|"previsao"|"media"}.
+    config: anexo, folha12, aliq_cbs, aliq_ibs, reducao_setor, pct_b2b (faltando, usa CONFIG_PADRAO).
+    O saldo credor do hibrido passa de um mes para o outro. Meses sem os 12 anteriores ficam como 'base'.
+    """
+    cfg = {**CONFIG_PADRAO, **(config or {})}
+    por_idx = {}
+    for m in meses:
+        i = _mes_idx(m.get("mes"))
+        if i in por_idx:
+            raise ValueError(f"Mês repetido no histórico: {m['mes']}.")
+        receita, compras = float(m.get("receita") or 0), float(m.get("compras") or 0)
+        if receita < 0 or compras < 0:
+            raise ValueError(f"Valores negativos em {m['mes']}.")
+        por_idx[i] = {"mes": somar_meses(m["mes"], 0), "tipo": m.get("tipo", "real"), "receita": receita, "compras": compras}
+    linhas, saldo = [], 0.0
+    inicio = min(por_idx) if por_idx else 0
+    for i in sorted(por_idx):
+        m = por_idx[i]
+        linha = {**m, "rbt12": None, "situacao": "ok", "erro": None, "resultado": None}
+        janela = [por_idx.get(j) for j in range(i - 12, i)]
+        if any(x is None for x in janela):
+            linha["situacao"] = "base" if i - 12 < inicio else "lacuna"
+            linha["erro"] = None if linha["situacao"] == "base" else "Faltam meses anteriores no histórico para fechar o RBT12."
+            linhas.append(linha)
+            continue
+        rbt12 = 0.0
+        for x in janela:
+            rbt12 += x["receita"]
+        linha["rbt12"] = _r2(rbt12)
+        try:
+            r = simular_puro_hibrido(cfg["anexo"], linha["rbt12"], m["receita"], i // 12, m["compras"], cfg["aliq_cbs"],
+                                     cfg["aliq_ibs"], cfg["reducao_setor"], cfg["pct_b2b"], cfg["folha12"], saldo)
+        except ValueError as e:
+            linha.update(situacao="erro", erro=str(e))
+            linhas.append(linha)
+            continue
+        if r["hibrido"]:
+            saldo = r["hibrido"]["saldo_credor_final"]
+        linha["resultado"] = r
+        linhas.append(linha)
+    return linhas
+
+
+def carregar_historico(caminho):
+    """Le um historico exportado pelo site (botao Exportar). Retorna (nome, config, meses)."""
+    import json
+    with open(caminho, encoding="utf-8") as f:
+        dados = json.load(f)
+    if not isinstance(dados, dict) or not isinstance(dados.get("meses"), list):
+        raise ValueError("Arquivo não é um histórico do MEI sem Medo (falta a lista 'meses').")
+    return dados.get("nome", "Histórico"), {**CONFIG_PADRAO, **(dados.get("config") or {})}, dados["meses"]
+
+
 LIMITE_MEI = 81000.0
 ATIVIDADES_MEI = {"comercio": ("Comércio / indústria", 1.0, "I"), "servicos": ("Serviços", 5.0, "III"), "ambos": ("Comércio e serviços", 6.0, "III")}
 
@@ -137,8 +328,21 @@ def _num(msg, padrao=None):
             print("Digite um número, por exemplo 12000.")
 
 
+def _imprimir_puro_hibrido(r):
+    print(f"Anexo {r['anexo']}, faixa {r['faixa']}, efetiva {r['aliquota_efetiva']*100:.2f}% -> DAS (puro) R$ {r['puro']['das']:.2f}")
+    h = r["hibrido"]
+    if h is None:
+        print("Antes de 2027 não há CBS/IBS: só existe o Simples atual.")
+        return
+    print(f"Híbrido: DAS R$ {h['das']:.2f} + IBS/CBS à parte R$ {h['ibs_cbs_a_pagar']:.2f} "
+          f"(débito {h['debito']:.2f} - crédito {h['credito_compras']:.2f}) = R$ {h['total']:.2f}")
+    print(f"Diferença (híbrido - puro): R$ {r['diferenca']:.2f}. Crédito ao cliente B2B: puro R$ {r['puro']['credito_cliente_b2b']:.2f}"
+          f" x híbrido R$ {h['credito_cliente_b2b']:.2f}")
+
+
 def main():
-    print("Calculadoras (simulação didática, NÃO é cálculo oficial). 1) DAS do Simples  2) Créditos IBS/CBS  3) Limite do MEI  Enter) sair")
+    print("Calculadoras (simulação didática, NÃO é cálculo oficial). 1) DAS do Simples  2) Créditos IBS/CBS  3) Limite do MEI\n"
+          "4) Simples puro x híbrido (um mês)  5) Puro x híbrido mês a mês (histórico exportado do site)  Enter) sair")
     esc = input("Opção: ").strip()
     try:
         if esc == "1":
@@ -157,7 +361,27 @@ def main():
             meses = int(_num("Meses de atividade neste ano (12 se abriu antes): "))
             print(analisar_mei(ativ, meses, _num("Faturado no ano até agora (R$): "), int(_num("Meses que faltam até dezembro: ")),
                                _num("Faturamento mensal previsto (R$): ")))
-    except ValueError as e:
+        elif esc == "4":
+            anexo = input("Anexo (I a V): ").strip().upper()
+            r = simular_puro_hibrido(anexo, _num("RBT12 (receita dos 12 meses anteriores): "), _num("Receita do mês: "),
+                                     int(_num("Ano (2027 a 2033) [2027]: ", 2027)), _num("Compras do mês com crédito: "),
+                                     _num("Alíquota da CBS % [8.8]: ", 8.8), _num("Alíquota do IBS % [17.7]: ", 17.7),
+                                     _num("Redução do setor % (0, 30 ou 60) [0]: ", 0), _num("% das vendas para empresas [0]: ", 0),
+                                     _num("Folha 12 meses (Fator R) [0]: ", 0))
+            _imprimir_puro_hibrido(r)
+        elif esc == "5":
+            nome, cfg, meses = carregar_historico(input("Arquivo .json exportado pelo site: ").strip().strip('"'))
+            print(f"{nome} - Anexo {cfg['anexo']}, CBS {cfg['aliq_cbs']}%, IBS {cfg['aliq_ibs']}%")
+            print(f"{'Mês':8} {'Receita':>12} {'RBT12':>14} {'Puro':>11} {'Híbrido':>11} {'Diferença':>11}")
+            for ln in projetar_historico(meses, cfg):
+                r = ln["resultado"]
+                if r is None:
+                    print(f"{ln['mes']:8} {ln['receita']:12.2f}   {ln['erro'] or 'base do RBT12'}")
+                    continue
+                h = r["hibrido"]
+                print(f"{ln['mes']:8} {ln['receita']:12.2f} {ln['rbt12']:14.2f} {r['puro']['total']:11.2f} "
+                      + (f"{h['total']:11.2f} {r['diferenca']:11.2f}" if h else f"{'-':>11} {'-':>11}"))
+    except (ValueError, OSError) as e:
         print(f"Dado inválido: {e}")
 
 

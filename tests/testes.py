@@ -119,6 +119,23 @@ def main():
     assert calculadora.analisar_mei("servicos", 12, 60000, 6, 6000)["status"] == "ate_20"
     assert calculadora.analisar_mei("servicos", 12, 70000, 6, 9000)["status"] == "acima_20"
     print("Calculadora MEI: DAS por atividade e faixas de excesso OK")
+    # Simples puro x hibrido: Anexo III, RBT12 300 mil (2a faixa, efetiva 8,08%), receita 30 mil, compras 8 mil
+    r = calculadora.simular_puro_hibrido("III", 300000, 30000, 2033, 8000, pct_b2b=50)
+    assert r["puro"]["total"] == 2424.0 and r["hibrido"]["das"] == 1233.82, "DAS puro/hibrido 2033"
+    assert (r["hibrido"]["debito"], r["hibrido"]["credito_compras"], r["hibrido"]["total"]) == (7950.0, 2120.0, 7063.82), "IBS/CBS 2033"
+    assert calculadora.simular_puro_hibrido("III", 300000, 30000, 2027, 8000)["hibrido"]["total"] == 3945.5, "transicao 2027"
+    assert calculadora.simular_puro_hibrido("III", 300000, 30000, 2026)["hibrido"] is None, "sem hibrido antes de 2027"
+    f5 = calculadora.simular_puro_hibrido("III", 3000000, 250000, 2033)
+    assert abs(f5["aliquota_efetiva"] * f5["parcela_icms_iss"] - 0.05) < 1e-12, "teto de 5% do ISS"
+    assert set(calculadora.REPARTICAO) == set(calculadora.ANEXOS) and all(len(f) == 6 for f in calculadora.REPARTICAO.values()), "reparticao"
+    hist = calculadora.meses_base_rbt12("2026-11", 300000)
+    assert round(sum(m["receita"] for m in hist), 2) == 300000 and hist[0]["mes"] == "2025-11", "base do RBT12"
+    hist.append({"mes": "2026-11", "receita": 42000, "compras": 0, "tipo": "previsao"})
+    hist.append({"mes": "2026-12", "receita": 42000, "compras": 0, "tipo": "previsao"})
+    linhas = calculadora.projetar_historico(hist, {"anexo": "I"})
+    assert [ln["situacao"] for ln in linhas].count("base") == 12 and linhas[12]["rbt12"] == 300000.0, "RBT12 do 1o mes"
+    assert linhas[13]["rbt12"] == 317000.0, "RBT12 rola: sai a media de 25 mil e entra 42 mil"
+    print("Simples puro x hibrido: transicao 2026-2033, teto do ISS e historico do RBT12 OK")
     cmp = comparar_modelos(base)
     for m, (tam, comp, nn) in cmp.items():
         print(f"Modelo {m}: {comp}/{nn} respostas com fonte+data+aviso corretos; tamanho medio {tam:.0f} caracteres")

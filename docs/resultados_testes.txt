@@ -34,12 +34,13 @@
 [OK] 'vale a pena optar pelo regime regular de IBS e CBS?'          -> ok/K3 (esperado ok/K3)
 
 Acuracia: 34/34 = 100%
-Tempo medio: 2.35 ms | maximo: 3.29 ms
+Tempo medio: 4.89 ms | maximo: 9.62 ms
 Base: 37 registros, 6 temas, 89 arestas no grafo - integridade OK
-[OK] base ausente: Arquivo da base nao encontrado: /tmp/tmpjhjelqyd/nao_existe.json
+[OK] base ausente: Arquivo da base nao encontrado: C:\Users\Usuario\AppData\Local\Temp\tmpl9g8p8e_\nao_existe.json
 [OK] base vazia: Base vazia: precisa ser uma lista com ao menos 1 registro.
 [OK] base sem_campo: Registro #1 (x) sem campo(s): fonte, relacionados
 [OK] base aresta_invalida: Registro x aponta para id inexistente: ZZ
 Calculadora MEI: DAS por atividade e faixas de excesso OK
+Simples puro x hibrido: transicao 2026-2033, teto do ISS e historico do RBT12 OK
 Modelo A: 26/26 respostas com fonte+data+aviso corretos; tamanho medio 519 caracteres
 Modelo B: 26/26 respostas com fonte+data+aviso corretos; tamanho medio 616 caracteres
