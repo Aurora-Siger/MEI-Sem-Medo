@@ -166,14 +166,12 @@
 
 <section id="tab-simples" role="tabpanel" data-ctx="simples" hidden>
   <h2>Simples Nacional</h2>
-  <p>Descubra quanto você paga de DAS no mês.</p>
+  <p>Para empresas no Simples Nacional. Se você é MEI, o DAS é fixo: veja a calculadora <button type="button" class="link" data-aba="mei">Meu limite</button>.</p>
   <form id="form-das" class="grade">
     <label>Seu tipo de negócio<select id="das-anexo"></select></label>
     <label>Quanto faturou nos últimos 12 meses? (R$)<small>É o chamado RBT12.</small><input id="das-rbt" inputmode="decimal" value="300000"></label>
     <label>Quanto faturou neste mês? (R$)<input id="das-mes" inputmode="decimal" value="30000"></label>
-    <details class="ajustes"><summary>Tenho Fator R (Anexo V)</summary>
-      <label>Folha de salários + pró-labore em 12 meses (R$)<small>Só muda a conta no Anexo V.</small><input id="das-folha" inputmode="decimal" value="0"></label>
-    </details>
+    <label id="das-folha-wrap" hidden>Folha de salários + pró-labore dos últimos 12 meses (R$)<small>No Anexo V, se isso for 28% ou mais do faturamento, você passa a pagar pela tabela do Anexo III, que é menor.</small><input id="das-folha" inputmode="decimal" value="0"></label>
     <button type="submit">Calcular DAS</button>
   </form>
   <div id="res-das" aria-live="polite"></div>

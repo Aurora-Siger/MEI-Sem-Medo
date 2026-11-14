@@ -187,6 +187,7 @@
   // ----- simples -----
   const opts = Object.entries(M.ANEXOS).map(([k, v]) => `<option value="${k}">Anexo ${k} - ${v[0]}</option>`).join("");
   $("anexo-ver").innerHTML = opts; $("das-anexo").innerHTML = Object.entries(M.ANEXOS).map(([k, v]) => `<option value="${k}">${v[0]} (Anexo ${k})</option>`).join("");
+  $("das-anexo").onchange = () => { $("das-folha-wrap").hidden = $("das-anexo").value !== "V"; };
   function tabela() {
     const a = $("anexo-ver").value, f = M.ANEXOS[a][1];
     $("tabela-anexo").innerHTML = "<tr><th>Faixa</th><th>Receita 12 meses até</th><th>Alíquota nominal</th><th>Parcela a deduzir</th></tr>" +
