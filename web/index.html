@@ -107,9 +107,9 @@
   <div id="lista-temas"></div>
 </section>
 
-<section id="tab-preco" role="tabpanel" hidden>
+<section id="tab-preco" role="tabpanel" data-ctx="preco" hidden>
   <h2>Quanto cobrar?</h2>
-  <p>Descubra o preço que paga as contas e ainda deixa lucro (método do Sebrae).</p>
+  <p>Descubra o preço que paga as contas e ainda deixa lucro.</p>
   <fieldset class="modo-preco"><legend>O que você vende?</legend>
     <label class="radio"><input type="radio" name="p-modo" value="produto" checked> Produto</label>
     <label class="radio"><input type="radio" name="p-modo" value="servico"> Serviço</label>
@@ -118,7 +118,7 @@
     <div id="p-produto" class="grupo">
       <label class="largo">Qual produto você vende?<input id="p-nome" maxlength="60" placeholder="Ex.: bolo de pote, camiseta, vela aromática" autocomplete="off"></label>
       <fieldset class="comp largo"><legend>Do que ele é feito? Custo de cada unidade</legend>
-        <p class="fonte">Liste os componentes: ingrediente, matéria-prima, embalagem, etiqueta. Informe quanto pagou e quantas unidades aquilo rende.</p>
+        <p class="fonte">Ingredientes, embalagem, etiqueta... Diga quanto pagou e quantas unidades rende.</p>
         <div id="p-comps"></div>
         <div class="acoes"><button type="button" id="p-addcomp">+ Adicionar componente</button></div>
         <p class="comp-total">Custo por unidade: <strong id="p-custo-total">R$ 0,00</strong></p>
@@ -126,7 +126,7 @@
         <label id="p-direto-wrap" hidden>Custo de cada unidade (R$)<input id="p-custo-direto" inputmode="decimal" value="20"></label>
         <input id="p-custo" type="hidden" value="20">
       </fieldset>
-      <label>Gastos fixos do mês (R$)<small>Aluguel, internet, luz, o DAS do MEI (de R$ 82,05 a R$ 87,05) e <strong>quanto você quer tirar para você</strong>.</small><input id="p-fixos" inputmode="decimal" value="1500"></label>
+      <label>Gastos fixos do mês (R$)<small>Aluguel, internet, DAS e <strong>quanto você quer tirar para você</strong>.</small><input id="p-fixos" inputmode="decimal" value="1500"></label>
       <label>Quantas unidades você vende por mês?<input id="p-volume" inputmode="numeric" value="100"></label>
     </div>
     <div id="p-servico" class="grupo" hidden>
@@ -147,9 +147,9 @@
   <div id="res-preco" aria-live="polite"></div>
 </section>
 
-<section id="tab-mei" role="tabpanel" hidden>
+<section id="tab-mei" role="tabpanel" data-ctx="mei" hidden>
   <h2>Será que passei do limite?</h2>
-  <p>O limite é de <strong>R$ 81.000 por ano</strong>. Veja onde você está e quanto ainda pode faturar.</p>
+  <p>O limite do MEI é <strong>R$ 81.000 por ano</strong>. Veja onde você está.</p>
   <form id="form-mei" class="grade">
     <label>O que você faz?<select id="m-ativ"><option value="comercio">Vendo produtos</option><option value="servicos">Presto serviços</option><option value="ambos">As duas coisas</option></select></label>
     <label>Quanto já faturou neste ano? (R$)<input id="m-fat" inputmode="decimal" value="40000"></label>
@@ -164,28 +164,43 @@
   <div id="res-mei" aria-live="polite"></div>
 </section>
 
-<section id="tab-simples" role="tabpanel" hidden>
-  <h2>Categorias (anexos) do Simples Nacional</h2>
-  <p>Cada anexo corresponde a um tipo de atividade. Escolha o anexo para ver as faixas de receita e as alíquotas (LC 123/2006).</p>
-  <label for="anexo-ver">Anexo</label>
-  <select id="anexo-ver"></select>
-  <div class="tabela-wrap"><table id="tabela-anexo"></table></div>
-  <h3>Calculadora do DAS</h3>
+<section id="tab-simples" role="tabpanel" data-ctx="simples" hidden>
+  <h2>Simples Nacional</h2>
+  <p>Descubra quanto você paga de DAS no mês.</p>
   <form id="form-das" class="grade">
-    <label>Anexo<select id="das-anexo"></select></label>
-    <label>Receita dos últimos 12 meses (RBT12), R$<input id="das-rbt" inputmode="decimal" value="300000"></label>
-    <label>Receita do mês, R$<input id="das-mes" inputmode="decimal" value="30000"></label>
-    <label>Folha de salários + pró-labore em 12 meses, R$ <small>(só para Fator R, Anexo V)</small><input id="das-folha" inputmode="decimal" value="0"></label>
+    <label>Seu tipo de negócio<select id="das-anexo"></select></label>
+    <label>Quanto faturou nos últimos 12 meses? (R$)<small>É o chamado RBT12.</small><input id="das-rbt" inputmode="decimal" value="300000"></label>
+    <label>Quanto faturou neste mês? (R$)<input id="das-mes" inputmode="decimal" value="30000"></label>
+    <details class="ajustes"><summary>Tenho Fator R (Anexo V)</summary>
+      <label>Folha de salários + pró-labore em 12 meses (R$)<small>Só muda a conta no Anexo V.</small><input id="das-folha" inputmode="decimal" value="0"></label>
+    </details>
     <button type="submit">Calcular DAS</button>
   </form>
   <div id="res-das" aria-live="polite"></div>
+  <details><summary>Ver a tabela de faixas de cada anexo</summary>
+    <label for="anexo-ver">Anexo</label>
+    <select id="anexo-ver"></select>
+    <div class="tabela-wrap"><table id="tabela-anexo"></table></div>
+  </details>
 </section>
 
-<section id="tab-hibrido" role="tabpanel" hidden>
-  <h2>Simples puro x Simples híbrido</h2>
-  <p>No <strong>Simples puro</strong> tudo continua numa guia só, o DAS. No <strong>Simples híbrido</strong> (a partir de 2027), a CBS e o IBS saem do DAS e são pagos à parte: você paga o imposto sobre as vendas, desconta o crédito das compras, e o cliente empresa recebe crédito cheio.</p>
-  <p class="aviso">Simulação didática. As alíquotas de CBS e IBS são estimativas editáveis e as regras do híbrido para o Simples ainda dependem de regulamentação. Confirme com um contador.</p>
+<section id="tab-hibrido" role="tabpanel" data-ctx="hibrido" hidden>
+  <h2>Reforma: Simples puro x híbrido</h2>
+  <p>Compare quanto você paga por mês hoje (puro) e depois da reforma (híbrido), de 2027 a 2033.</p>
+  <form id="form-hib" class="grade">
+    <label>Faturamento dos últimos 12 meses (R$)<small>RBT12.</small><input id="hs-rbt" inputmode="decimal" value="300000"></label>
+    <label>Faturamento deste mês (R$)<input id="hs-mes" inputmode="decimal" value="30000"></label>
+    <label>Compras do mês com crédito (R$)<small>Opcional. De fornecedores do regime regular.</small><input id="hs-compras" inputmode="decimal" value="8000"></label>
+    <label>Ano<select id="hs-ano"></select></label>
+    <button type="submit">Simular</button>
+  </form>
+  <p><button type="button" class="link" id="hs-usar" hidden></button></p>
+  <div id="res-hib" aria-live="polite"></div>
 
+  
+  <details class="avancado"><summary>Avançado: tabela do anexo, dados da empresa e simulação mês a mês</summary>
+  <details><summary>O que é Simples puro e híbrido?</summary><p>No <strong>puro</strong> tudo continua numa guia só, o DAS. No <strong>híbrido</strong> (a partir de 2027) CBS e IBS saem do DAS e são pagos à parte: você paga o imposto sobre as vendas, desconta o crédito das compras, e o cliente empresa recebe crédito cheio.</p></details>
+  <div id="hs-tabela"></div>
   <div class="card">
     <label for="h-sel">Histórico salvo <small>(uma empresa ou cenário por histórico)</small></label>
     <select id="h-sel"></select>
@@ -212,18 +227,6 @@
   <div id="h-empresa-erro" aria-live="polite"></div>
   <p class="fonte">Esses dados ficam salvos no histórico escolhido e valem para a simulação de um mês e para a tabela mês a mês.</p>
 
-  <h3>Simular um mês</h3>
-  <form id="form-hib" class="grade">
-    <label>RBT12, R$ <small>(receita dos 12 meses anteriores)</small><input id="hs-rbt" inputmode="decimal" value="300000"></label>
-    <label>Receita do mês, R$<input id="hs-mes" inputmode="decimal" value="30000"></label>
-    <label>Compras do mês com crédito, R$ <small>(de fornecedores do regime regular, sem imposto)</small><input id="hs-compras" inputmode="decimal" value="8000"></label>
-    <label>Ano<select id="hs-ano"></select></label>
-    <button type="submit">Simular</button>
-  </form>
-  <p><button type="button" class="link" id="hs-usar" hidden></button></p>
-  <div id="hs-tabela"></div>
-  <div id="res-hib" aria-live="polite"></div>
-
   <h3>Mês a mês: histórico do RBT12</h3>
   <p>Registre o RBT12 real de hoje e vá acrescentando os meses seguintes (reais ou previsões). O RBT12 de cada mês é a soma da receita dos 12 meses anteriores, então ele anda sozinho conforme você preenche.</p>
   <div id="h-inicio" class="card" hidden>
@@ -245,37 +248,37 @@
   </div>
   <div id="h-resumo" aria-live="polite"></div>
   <div id="h-detalhe" aria-live="polite"></div>
+
+  </details>
 </section>
 
-<section id="tab-creditos" role="tabpanel" hidden>
-  <h2>Simulador de créditos de IBS/CBS</h2>
-  <p>Compara, <strong>só para IBS e CBS</strong>, continuar no Simples com pagar esses tributos pelo regime regular. É uma <strong>simulação didática</strong>: as alíquotas finais e as regras para o Simples ainda dependem de regulamentação. Os campos marcados com “estimativa” são editáveis.</p>
+<section id="tab-creditos" role="tabpanel" data-ctx="creditos" hidden>
+  <h2>Créditos de IBS/CBS</h2>
+  <p>Seu cliente empresa recebe menos crédito de imposto quando você está no Simples. Veja quanto isso pesa.</p>
   <form id="form-cred" class="grade">
-    <label>Vendas do mês para empresas (B2B), R$<input id="c-b2b" inputmode="decimal" value="20000"></label>
-    <label>Vendas do mês ao consumidor final, R$<input id="c-cons" inputmode="decimal" value="10000"></label>
-    <label>Compras do mês com crédito (de fornecedores do regime regular, sem imposto), R$<input id="c-compras" inputmode="decimal" value="8000"></label>
-    <label>DAS pago no mês, R$ <small>(use a calculadora da aba Simples)</small><input id="c-das" inputmode="decimal" value="2000"></label>
-    <label>Alíquota IBS+CBS, % <small>(estimativa)</small><input id="c-aliq" inputmode="decimal" value="26,5"></label>
-    <label>Parcela do DAS que corresponde a IBS/CBS, % <small>(estimativa)</small><input id="c-parcela" inputmode="decimal" value="15"></label>
+    <label>Vendas do mês para empresas (R$)<input id="c-b2b" inputmode="decimal" value="20000"></label>
+    <label>Vendas do mês para o consumidor final (R$)<input id="c-cons" inputmode="decimal" value="10000"></label>
+    <label>Compras do mês de fornecedores do regime regular (R$)<small>Sem imposto.</small><input id="c-compras" inputmode="decimal" value="8000"></label>
+    <label>DAS que você paga no mês (R$)<input id="c-das" inputmode="decimal" value="2000"></label>
+    <details class="ajustes"><summary>Ajustar as estimativas</summary>
+      <label>Alíquota de IBS+CBS (%)<small>Estimativa.</small><input id="c-aliq" inputmode="decimal" value="26,5"></label>
+      <label>Parcela do DAS que corresponde a IBS/CBS (%)<small>Estimativa.</small><input id="c-parcela" inputmode="decimal" value="15"></label>
+    </details>
     <button type="submit">Simular</button>
   </form>
+  <p class="aviso">Simulação didática: as regras para o Simples ainda dependem de regulamentação.</p>
   <div id="res-cred" aria-live="polite"></div>
 </section>
 
-<section id="tab-split" role="tabpanel" hidden>
-  <h2>Como funciona o split payment</h2>
-  <p>É a divisão automática do pagamento: na hora em que o cliente paga, a parte do imposto (IBS e CBS) vai direto ao governo e o resto chega ao vendedor. Teste com uma venda:</p>
+<section id="tab-split" role="tabpanel" data-ctx="split" hidden>
+  <h2>Split payment</h2>
+  <p>Na hora em que o cliente paga, o imposto vai direto ao governo e o resto chega até você. Teste com uma venda:</p>
   <form id="form-split" class="grade">
-    <label>Valor da venda, R$<input id="s-valor" inputmode="decimal" value="1000"></label>
-    <label>Parcela do imposto no preço, % <small>(exemplo)</small><input id="s-pct" inputmode="decimal" value="20"></label>
+    <label>Valor da venda (R$)<input id="s-valor" inputmode="decimal" value="1000"></label>
+    <label>Parcela do imposto no preço (%)<small>Exemplo.</small><input id="s-pct" inputmode="decimal" value="20"></label>
   </form>
   <div id="res-split" aria-live="polite"></div>
-  <ol class="passos">
-    <li>O cliente paga (Pix, cartão, boleto) o valor total.</li>
-    <li>O sistema de pagamento separa o IBS/CBS daquela venda.</li>
-    <li>O imposto segue ao governo; o restante cai na conta do vendedor.</li>
-  </ol>
-  <p class="aviso">Datas, modalidades e a aplicação ao MEI e ao Simples ainda dependem de regulamentação. Pergunte na aba “Perguntar”: <em>quando o split começa?</em></p>
+  <p class="aviso">Datas e regras para MEI e Simples ainda dependem de regulamentação.</p>
 </section>
 
 </main>

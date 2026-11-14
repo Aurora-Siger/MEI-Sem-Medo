@@ -66,6 +66,20 @@
   abrirAba("perguntar");
   document.addEventListener("click", (e) => { const b = e.target.closest("[data-aba]"); if (b) abrirAba(b.dataset.aba); });
 
+  // ----- "perguntar ao assistente" em cada calculadora: leva a pergunta (com o resultado, se houver) para o chat -----
+  const ctx = {};
+  const PERGUNTA = { preco: "Como o preço de venda é calculado e como melhoro minha margem?", mei: "Como funcionam o limite de faturamento e o DAS do MEI?",
+    simples: "Como é calculado o DAS do Simples Nacional? O que é alíquota efetiva?", hibrido: "Qual a diferença entre Simples puro e híbrido na reforma tributária?",
+    creditos: "Como funcionam os créditos de IBS e CBS para quem está no Simples?", split: "Como funciona o split payment?" };
+  document.querySelectorAll("[data-ctx]").forEach((sec) => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "ia-btn"; b.textContent = "Tirar dúvida com o assistente";
+    b.onclick = () => {
+      const k = sec.dataset.ctx; abrirAba("perguntar");
+      const q = $("pergunta"); q.value = (PERGUNTA[k] + (ctx[k] ? " " + ctx[k] : "")).slice(0, 300); q.focus(); q.setSelectionRange(q.value.length, q.value.length);
+    };
+    sec.querySelector("h2").after(b);
+  });
+
   // ----- perguntar -----
   const FERRAMENTA = { A3: ["simples", "Abrir calculadora do DAS"], A4: ["simples", "Abrir calculadora do DAS"], A5: ["simples", "Abrir calculadora do DAS"], A2: ["simples", "Ver tabela dos anexos"],
     K1: ["creditos", "Abrir simulador de créditos"], K2: ["creditos", "Abrir simulador de créditos"], K3: ["creditos", "Abrir simulador de créditos"], K5: ["creditos", "Abrir simulador de créditos"],
@@ -172,7 +186,7 @@
 
   // ----- simples -----
   const opts = Object.entries(M.ANEXOS).map(([k, v]) => `<option value="${k}">Anexo ${k} - ${v[0]}</option>`).join("");
-  $("anexo-ver").innerHTML = opts; $("das-anexo").innerHTML = opts;
+  $("anexo-ver").innerHTML = opts; $("das-anexo").innerHTML = Object.entries(M.ANEXOS).map(([k, v]) => `<option value="${k}">${v[0]} (Anexo ${k})</option>`).join("");
   function tabela() {
     const a = $("anexo-ver").value, f = M.ANEXOS[a][1];
     $("tabela-anexo").innerHTML = "<tr><th>Faixa</th><th>Receita 12 meses até</th><th>Alíquota nominal</th><th>Parcela a deduzir</th></tr>" +
@@ -184,9 +198,11 @@
     e.preventDefault();
     try {
       const r = M.calcularDas($("das-anexo").value, num("das-rbt"), num("das-mes"), num("das-folha") || 0);
-      $("res-das").innerHTML = `<div class="card"><div class="num">${brl(r.das)}</div><p>DAS estimado no mês. Anexo ${r.anexo}, ${r.faixa}ª faixa, alíquota nominal ${r.aliquota_nominal.toLocaleString("pt-BR")}%, <strong>efetiva ${pct(r.aliquota_efetiva)}</strong>.</p>
-        ${r.anexo !== $("das-anexo").value ? "<p>Com Fator R ≥ 28%, a atividade foi calculada no Anexo III.</p>" : ""}
-        <p class="fonte">Fórmula: (RBT12 × alíquota nominal − parcela a deduzir) ÷ RBT12. Estimativa: confirme no PGDAS-D ou com seu contador.</p></div>`;
+      ctx.simples = `Meu DAS deu ${brl(r.das)} (${pct(r.aliquota_efetiva)} do faturamento, Anexo ${r.anexo}).`;
+      $("res-das").innerHTML = `<div class="card"><p>Você paga de DAS, neste mês:</p><div class="num">${brl(r.das)}</div>
+        <p>É cerca de <strong>${pct(r.aliquota_efetiva)}</strong> do que você faturou.${r.anexo !== $("das-anexo").value ? " Com Fator R de 28% ou mais, a conta usou o Anexo III." : ""}</p>
+        <details class="ajustes"><summary>Ver a conta</summary><p>Anexo ${r.anexo}, ${r.faixa}ª faixa, alíquota nominal ${r.aliquota_nominal.toLocaleString("pt-BR")}%.</p>
+        <p class="fonte">(RBT12 × alíquota nominal − parcela a deduzir) ÷ RBT12. Estimativa: confirme no PGDAS-D ou com seu contador.</p></details></div>`;
     } catch (err) { erro($("res-das"), err); }
   });
 
@@ -199,6 +215,7 @@
       const msg = { dentro: () => `<p>Tudo certo! Você deve terminar o ano <strong>dentro do limite</strong>. Pode faturar até <strong>${brl(r.maximo_por_mes_restante)} por mês</strong> nos meses que faltam.</p>`,
         ate_20: () => `<p class="aviso">Atenção! Você passaria do limite em <strong>${brl(r.excesso)}</strong>. Até 20% de excesso você segue no MEI até dezembro, paga um DAS complementar (cerca de <strong>${brl(r.das_complementar_estimado)}</strong>) e vira microempresa no ano seguinte.</p>`,
         acima_20: () => `<p class="aviso">Cuidado! Você passaria do limite em <strong>${brl(r.excesso)}</strong>, mais de 20%. Aí você é desenquadrado desde o começo do ano e paga imposto de microempresa retroativo. Fale com um contador antes.</p>` }[r.status]();
+      ctx.mei = `Já usei ${pct(r.uso_pct)} do limite e meu DAS é ${brl(r.das_mensal)} por mês.`;
       $("res-mei").innerHTML = `<div class="card"><div class="num">${brl(r.das_mensal)}<small> de DAS por mês</small></div>
         <p>Você já usou <strong>${pct(r.uso_pct)}</strong> do limite de ${brl(r.limite_ano)}.</p>
         <div class="uso ${r.status}" role="img" aria-label="${pct(Math.min(r.uso_pct, 1))} do limite usado"><div style="width:${Math.min(r.uso_pct, 1) * 100}%"></div></div>${msg}
@@ -284,6 +301,7 @@
       <div class="cmp"><div><span class="fonte">Simples puro</span><div class="num">${brl(p.total)}</div><span class="fonte">só o DAS</span></div>
         <div><span class="fonte">Simples híbrido</span><div class="num">${brl(h.total)}</div><span class="fonte">DAS ${brl(h.das)} + IBS/CBS ${brl(h.ibs_cbs_a_pagar)}</span></div></div>
       <p>${veredito}</p>
+      <details class="ajustes"><summary>Ver a conta detalhada</summary>
       <div class="tabela-wrap"><table><tr><th></th><th>Puro</th><th>Híbrido</th></tr>
         ${l("Guia do Simples (DAS)", brl(p.das), brl(h.das))}
         ${l("· dentro do DAS: CBS (no lugar de PIS/Cofins)", brl(p.cbs_no_das), "sai do DAS")}
@@ -297,7 +315,7 @@
         ${l("Crédito que seus clientes empresa recebem", brl(p.credito_cliente_b2b), brl(h.credito_cliente_b2b))}
       </table></div>
       ${h.saldo_credor_final ? `<p>Sobram <strong>${brl(h.saldo_credor_final)}</strong> de crédito para abater nos próximos meses.</p>` : ""}
-      <p class="fonte">${cab} Dentro do DAS, PIS+Cofins = ${pct(r.parcela_pis_cofins)} e ICMS/ISS = ${pct(r.parcela_icms_iss)} (repartição da LC 123). ${textoRegra(r)} O crédito das compras usa a alíquota cheia, sem a redução do setor.${faixa6}</p></div>`;
+      <p class="fonte">${cab} Dentro do DAS, PIS+Cofins = ${pct(r.parcela_pis_cofins)} e ICMS/ISS = ${pct(r.parcela_icms_iss)} (repartição da LC 123). ${textoRegra(r)} O crédito das compras usa a alíquota cheia, sem a redução do setor.${faixa6}</p></details></div>`;
   }
 
   // simulação de um mês
@@ -307,6 +325,7 @@
       const r = M.simularPuroHibrido(c.anexo, num("hs-rbt"), num("hs-mes"), +$("hs-ano").value, $("hs-compras").value.trim() ? num("hs-compras") : 0,
         c.aliq_cbs, c.aliq_ibs, c.reducao_setor, c.pct_b2b, c.folha12);
       $("res-hib").innerHTML = cartaoPuroHibrido(r);
+      ctx.hibrido = r.hibrido ? `Em ${r.ano}, deu ${brl(r.puro.total)} no puro e ${brl(r.hibrido.total)} no híbrido.` : "";
     } catch (err) { erro($("res-hib"), err); }
   }
   // tabela de alíquotas do anexo escolhido (III ou V), destacando a faixa do RBT12 digitado
@@ -513,15 +532,16 @@
     try {
       const r = M.simularCreditos(num("c-b2b"), num("c-cons"), num("c-compras"), num("c-aliq"), num("c-das"), num("c-parcela"));
       const linha = (n, a, b) => `<tr><td>${n}</td><td>${brl(a)}</td><td>${brl(b)}</td></tr>`;
-      $("res-cred").innerHTML = `<div class="card tabela-wrap"><table><tr><th></th><th>Ficar no Simples</th><th>IBS/CBS no regime regular</th></tr>
-        ${linha("IBS/CBS a pagar no mês", r.simples.imposto_ibs_cbs, r.regular.imposto_ibs_cbs)}
-        ${linha("Crédito que seus clientes B2B recebem", r.simples.credito_para_cliente_b2b, r.regular.credito_para_cliente_b2b)}
-        ${linha("Crédito das suas compras aproveitado", r.simples.credito_das_compras, r.regular.credito_das_compras)}
-        ${linha("Custo total de tributos (DAS ajustado + IBS/CBS)", r.custo_total_simples, r.custo_total_regular)}</table></div>
-        <div class="card"><h3>Como ler</h3>
-        <p>No Simples, seus clientes empresas deixam de aproveitar <strong>${brl(r.credito_perdido_pelo_cliente)}</strong> por mês de crédito em relação ao regime regular, e você deixa de recuperar <strong>${brl(r.credito_compras_nao_aproveitado)}</strong> de crédito das suas compras.</p>
-        <p>${r.diferenca > 0 ? `Pelos números informados, o regime regular custaria <strong>${brl(r.diferenca)}</strong> a mais por mês. Ele só tende a compensar se o crédito que seus clientes recebem fizer você ganhar vendas ou permitir preço maior.` : `Pelos números informados, o regime regular custaria <strong>${brl(-r.diferenca)}</strong> a menos por mês.`}</p>
-        <p class="aviso">Simulação didática só de IBS/CBS, sem IRPJ, CPP, ISS/ICMS residual nem transição (2026–2033). Alíquota e parcela do DAS são estimativas suas. Valide com um contador.</p></div>`;
+      ctx.creditos = `Simulei: o regime regular custaria ${brl(Math.abs(r.diferenca))} ${r.diferenca > 0 ? "a mais" : "a menos"} por mês.`;
+      $("res-cred").innerHTML = `<div class="card"><p>${r.diferenca > 0 ? "Pagar IBS/CBS pelo regime regular custaria, por mês:" : "Pagar IBS/CBS pelo regime regular custaria, por mês, a menos:"}</p>
+        <div class="num">${brl(Math.abs(r.diferenca))}<small> ${r.diferenca > 0 ? "a mais" : "a menos"}</small></div>
+        <p>No Simples, seus clientes empresas deixam de aproveitar <strong>${brl(r.credito_perdido_pelo_cliente)}</strong> de crédito por mês, e você deixa de recuperar <strong>${brl(r.credito_compras_nao_aproveitado)}</strong> das suas compras.</p>
+        <details class="ajustes"><summary>Ver a conta</summary><div class="tabela-wrap"><table><tr><th></th><th>No Simples</th><th>Regime regular</th></tr>
+        ${linha("IBS/CBS a pagar", r.simples.imposto_ibs_cbs, r.regular.imposto_ibs_cbs)}
+        ${linha("Crédito dos clientes B2B", r.simples.credito_para_cliente_b2b, r.regular.credito_para_cliente_b2b)}
+        ${linha("Crédito das suas compras", r.simples.credito_das_compras, r.regular.credito_das_compras)}
+        ${linha("Custo total de tributos", r.custo_total_simples, r.custo_total_regular)}</table></div>
+        <p class="fonte">Só IBS/CBS, sem IRPJ, CPP nem transição. Alíquota e parcela do DAS são estimativas suas.</p></details></div>`;
     } catch (err) { erro($("res-cred"), err); }
   });
 
@@ -589,13 +609,15 @@
       const prod = modoPreco() === "produto";
       $("res-preco").innerHTML = `<div class="card"><p>Cobre, ${rotulo}:</p><div class="preco-grande">${brl(r.preco_sugerido)}</div>${status}
         <p>Nunca venda abaixo de <strong>${brl(r.preco_minimo)}</strong>: aí você paga para vender.</p>
-        ${prod ? `<p>Você precisa vender <strong>${r.ponto_equilibrio_unidades == null ? "mais do que consegue" : Math.ceil(r.ponto_equilibrio_unidades).toLocaleString("pt-BR") + " unidades por mês"}</strong> para pagar as contas.</p>` : `<p>Sua hora vale <strong>${brl(r.valor_hora)}</strong> só para cobrir sua renda e seus gastos.</p>`}
-        <details class="ajustes"><summary>Ver como o preço foi montado</summary>
+        ${prod ? "" : `<p>Sua hora vale <strong>${brl(r.valor_hora)}</strong> só para cobrir sua renda e seus gastos.</p>`}
+        <details class="ajustes"><summary>Ver a conta completa</summary>
         <div class="pilha" role="img" aria-label="Composição do preço">${seg.map(([k, n, x]) => `<div class="${k}" style="width:${Math.max(x, 0) / total * 100}%"></div>`).join("")}</div>
         <div class="leg">${seg.map(([k, n, x]) => `<span><i class="${k}"></i>${n}: ${brl(x)}</span>`).join("")}</div>
+        ${prod ? `<p>Para pagar as contas, venda pelo menos <strong>${r.ponto_equilibrio_unidades == null ? "mais do que consegue" : Math.ceil(r.ponto_equilibrio_unidades).toLocaleString("pt-BR") + " unidades por mês"}</strong>.</p>` : ""}
         ${prod ? detalheProduto(r, v, atual) : ""}
         ${prod ? `<p>Vendendo ${num("p-volume").toLocaleString("pt-BR")} por mês, sobra de lucro cerca de <strong>${brl(r.lucro_mensal_estimado)}</strong>, fora o que você já separou para você nos gastos fixos. Dá para dar até ${r.desconto_maximo_pct.toLocaleString("pt-BR")}% de desconto sem prejuízo.</p>` : ""}</details>
-        <p class="fonte">Ponto de partida (método do Sebrae): compare com os concorrentes.</p></div>`;
+        <p class="fonte">Método do Sebrae. Compare também com os concorrentes.</p></div>`;
+      ctx.preco = `Meu preço sugerido deu ${brl(r.preco_sugerido)} ${rotulo}.`;
     } catch (err) { erro($("res-preco"), err); }
   });
 })();
