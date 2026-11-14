@@ -1,6 +1,15 @@
 # MEI sem Medo — Citizen Assist AI (FIAP Global Solution 2026.2)
 
-**Equipe:** _[nome da equipe]_ · **RMs:** _[RM — nome]_ (preencher)
+**Equipe:** _[nome da equipe]_
+
+| Integrante | RM | Turma |
+|---|---|---|
+| Isabelle Caroline de Camargo Francisco | 572096 | 1CCOB |
+| Matheus Lyncoln Souza Dias | 570765 | 1CCOB |
+| Mirela Aparecida Bispo Miguel | 570830 | 1CCOB |
+| Rodrigo Abrantes Mizerani | 571808 | 1CCOB |
+| Vinícius Valiati | 568674 | 1CCOC |
+
 **Vídeo (YouTube, não listado):** _[link]_
 
 ## 1. Problema, público e temas

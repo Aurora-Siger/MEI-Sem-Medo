@@ -171,3 +171,4 @@ button.demo:hover{border-color:var(--ac);transform:translateY(-2px)}
 .logo-grande{display:block;width:min(300px,75%);margin:10px auto 4px}.logo-grande img{width:100%;height:auto}
 @media (max-width:480px){.marca img{height:52px}}
 .marca img{height:76px}@media (max-width:480px){.marca img{height:56px}}
+.equipe-t{margin:16px 0 4px;font-size:1rem}.equipe{margin:0;color:var(--mut);font-size:.92rem}
