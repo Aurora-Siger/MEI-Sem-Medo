@@ -54,7 +54,7 @@ Além da busca por palavras-chave, o projeto tem um **agente de IA de verdade** 
 - falha de rede, chave ou recusa de segurança não derrubam o app: o site volta para a busca na base.
 Limitação: o código verifica que há fonte e que o id existe, mas não checa cada número do texto contra o registro; por isso o prompt exige citar e as respostas são curtas.
 **Como usar:**
-No macOS, abra o Terminal na pasta do projeto e crie um ambiente virtual para não instalar pacotes no Python do sistema:
+No macOS, abra o Terminal na raiz do projeto (a pasta que contém `requirements.txt` e `src/`) e crie um ambiente virtual para não instalar pacotes no Python do sistema. Se o Terminal estiver na pasta `web/`, primeiro volte uma pasta com `cd ..`:
 ```
 python3 -m venv .venv
 source .venv/bin/activate
