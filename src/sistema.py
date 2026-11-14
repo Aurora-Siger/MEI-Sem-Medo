@@ -37,7 +37,8 @@ def tokens(txt):
 
 CAMPOS = ("id", "tema", "titulo", "palavras_chave", "resposta", "fonte", "url", "verificado", "confianca", "relacionados")
 TEMAS = {"reforma": "Reforma tributária", "mei": "Obrigações do MEI", "consumidor": "Direitos do consumidor (CDC/Procon)",
-         "split": "Split payment", "simples": "Simples Nacional: anexos e alíquotas", "creditos": "Recuperação de créditos"}
+         "split": "Split payment", "simples": "Simples Nacional: anexos e alíquotas", "creditos": "Recuperação de créditos",
+         "abrir": "Abrir e formalizar o MEI", "diaadia": "Dia a dia do negócio", "preco": "Preço e lucro"}
 
 
 class BaseInvalida(Exception):
@@ -67,6 +68,7 @@ def carregar(caminho=BASE):
         base[r["id"]] = r
     for r in base.values():
         r.setdefault("relacionados", [])
+        r.setdefault("base_legal", [])
         for i in r["relacionados"]:
             if i not in base:
                 raise BaseInvalida(f"Registro {r['id']} aponta para id inexistente: {i}")

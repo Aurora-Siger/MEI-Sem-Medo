@@ -24,6 +24,10 @@ window.BASE = [
    "R3",
    "S1",
    "K1"
+  ],
+  "base_legal": [
+   "EC 132/2023",
+   "LC 214/2025"
   ]
  },
  {
@@ -47,7 +51,8 @@ window.BASE = [
   "relacionados": [
    "M2",
    "R3"
-  ]
+  ],
+  "base_legal": []
  },
  {
   "id": "R3",
@@ -73,6 +78,9 @@ window.BASE = [
    "R2",
    "R6",
    "M2"
+  ],
+  "base_legal": [
+   "LC 214/2025"
   ]
  },
  {
@@ -98,7 +106,8 @@ window.BASE = [
   "relacionados": [
    "M4",
    "R7"
-  ]
+  ],
+  "base_legal": []
  },
  {
   "id": "R5",
@@ -123,6 +132,9 @@ window.BASE = [
    "R3",
    "R8",
    "K3"
+  ],
+  "base_legal": [
+   "LC 214/2025"
   ]
  },
  {
@@ -146,7 +158,8 @@ window.BASE = [
   "confianca": "alta",
   "relacionados": [
    "R3"
-  ]
+  ],
+  "base_legal": []
  },
  {
   "id": "R7",
@@ -172,7 +185,8 @@ window.BASE = [
    "M4",
    "R4",
    "C7"
-  ]
+  ],
+  "base_legal": []
  },
  {
   "id": "R8",
@@ -197,7 +211,8 @@ window.BASE = [
    "R1",
    "R5",
    "S4"
-  ]
+  ],
+  "base_legal": []
  },
  {
   "id": "M1",
@@ -224,7 +239,11 @@ window.BASE = [
   "relacionados": [
    "M6",
    "M2",
-   "A7"
+   "A7",
+   "B2"
+  ],
+  "base_legal": [
+   "LC 123/2006, art. 18-A, §1º"
   ]
  },
  {
@@ -249,7 +268,11 @@ window.BASE = [
   "confianca": "alta",
   "relacionados": [
    "M3",
-   "M1"
+   "M1",
+   "D3"
+  ],
+  "base_legal": [
+   "LC 123/2006, art. 18-A, §3º"
   ]
  },
  {
@@ -274,6 +297,9 @@ window.BASE = [
   "relacionados": [
    "M2",
    "M1"
+  ],
+  "base_legal": [
+   "Resolução CGSN 140/2018"
   ]
  },
  {
@@ -301,7 +327,11 @@ window.BASE = [
   "relacionados": [
    "M5",
    "R7",
-   "C7"
+   "C7",
+   "D5"
+  ],
+  "base_legal": [
+   "Resolução CGSN 140/2018"
   ]
  },
  {
@@ -327,7 +357,8 @@ window.BASE = [
   "relacionados": [
    "M4",
    "R4"
-  ]
+  ],
+  "base_legal": []
  },
  {
   "id": "M6",
@@ -351,31 +382,11 @@ window.BASE = [
   "confianca": "confirmar",
   "relacionados": [
    "M1",
-   "A7"
-  ]
- },
- {
-  "id": "M7",
-  "tema": "mei",
-  "titulo": "Abertura do MEI é gratuita",
-  "palavras_chave": [
-   "abrir",
-   "abertura",
-   "cnpj",
-   "gratis",
-   "gratuito",
-   "cobranca",
-   "golpe",
-   "ccmei",
-   "portal"
+   "A7",
+   "D4"
   ],
-  "resposta": "A abertura do MEI é 100% gratuita no Portal do Empreendedor, e o CNPJ (CCMEI) sai na hora. Desconfie de sites e intermediários que cobram para abrir.",
-  "fonte": "Adriano Freire (blog)",
-  "url": "https://www.adrianofreire.com.br/blog/mei-2026-guia-completo",
-  "verificado": "2026-11-12",
-  "confianca": "alta",
-  "relacionados": [
-   "M2"
+  "base_legal": [
+   "LC 123/2006, art. 18-A"
   ]
  },
  {
@@ -400,6 +411,9 @@ window.BASE = [
   "relacionados": [
    "C2",
    "C5"
+  ],
+  "base_legal": [
+   "CDC (Lei 8.078/1990), art. 18, §1º"
   ]
  },
  {
@@ -425,6 +439,9 @@ window.BASE = [
   "relacionados": [
    "C1",
    "C5"
+  ],
+  "base_legal": [
+   "CDC (Lei 8.078/1990), art. 26"
   ]
  },
  {
@@ -451,6 +468,9 @@ window.BASE = [
   "relacionados": [
    "C4",
    "C7"
+  ],
+  "base_legal": [
+   "CDC (Lei 8.078/1990), art. 49"
   ]
  },
  {
@@ -477,7 +497,8 @@ window.BASE = [
   "relacionados": [
    "C3",
    "C2"
-  ]
+  ],
+  "base_legal": []
  },
  {
   "id": "C5",
@@ -500,6 +521,9 @@ window.BASE = [
   "relacionados": [
    "C2",
    "C1"
+  ],
+  "base_legal": [
+   "CDC (Lei 8.078/1990), arts. 24 a 26"
   ]
  },
  {
@@ -524,7 +548,8 @@ window.BASE = [
   "relacionados": [
    "M4",
    "C2"
-  ]
+  ],
+  "base_legal": []
  },
  {
   "id": "S1",
@@ -546,6 +571,9 @@ window.BASE = [
    "S2",
    "R1",
    "S4"
+  ],
+  "base_legal": [
+   "LC 214/2025"
   ]
  },
  {
@@ -568,7 +596,8 @@ window.BASE = [
   "relacionados": [
    "S1",
    "K1"
-  ]
+  ],
+  "base_legal": []
  },
  {
   "id": "S3",
@@ -591,7 +620,8 @@ window.BASE = [
   "relacionados": [
    "S1",
    "S4"
-  ]
+  ],
+  "base_legal": []
  },
  {
   "id": "S4",
@@ -612,7 +642,8 @@ window.BASE = [
   "relacionados": [
    "S1",
    "R8"
-  ]
+  ],
+  "base_legal": []
  },
  {
   "id": "A1",
@@ -636,6 +667,9 @@ window.BASE = [
    "A2",
    "A7",
    "M1"
+  ],
+  "base_legal": [
+   "LC 123/2006, art. 3º"
   ]
  },
  {
@@ -663,6 +697,9 @@ window.BASE = [
    "A3",
    "A5",
    "A4"
+  ],
+  "base_legal": [
+   "LC 123/2006, art. 18 e Anexos I a V"
   ]
  },
  {
@@ -686,6 +723,9 @@ window.BASE = [
   "relacionados": [
    "A4",
    "A2"
+  ],
+  "base_legal": [
+   "LC 123/2006, Anexos I a V"
   ]
  },
  {
@@ -710,6 +750,9 @@ window.BASE = [
    "A3",
    "A2",
    "A5"
+  ],
+  "base_legal": [
+   "LC 123/2006, art. 18"
   ]
  },
  {
@@ -732,6 +775,9 @@ window.BASE = [
   "relacionados": [
    "A2",
    "A4"
+  ],
+  "base_legal": [
+   "LC 123/2006, art. 18"
   ]
  },
  {
@@ -755,6 +801,9 @@ window.BASE = [
   "relacionados": [
    "A1",
    "A7"
+  ],
+  "base_legal": [
+   "LC 123/2006, art. 19"
   ]
  },
  {
@@ -778,6 +827,9 @@ window.BASE = [
    "A1",
    "M1",
    "M6"
+  ],
+  "base_legal": [
+   "LC 123/2006, arts. 3º e 18-A"
   ]
  },
  {
@@ -802,6 +854,9 @@ window.BASE = [
    "K2",
    "K3",
    "R1"
+  ],
+  "base_legal": [
+   "LC 214/2025"
   ]
  },
  {
@@ -824,7 +879,8 @@ window.BASE = [
    "K1",
    "K3",
    "R5"
-  ]
+  ],
+  "base_legal": []
  },
  {
   "id": "K3",
@@ -847,7 +903,8 @@ window.BASE = [
    "K2",
    "R5",
    "K1"
-  ]
+  ],
+  "base_legal": []
  },
  {
   "id": "K4",
@@ -868,6 +925,9 @@ window.BASE = [
   "relacionados": [
    "K1",
    "K2"
+  ],
+  "base_legal": [
+   "LC 123/2006, art. 23"
   ]
  },
  {
@@ -890,6 +950,349 @@ window.BASE = [
    "K2",
    "R3",
    "M2"
+  ],
+  "base_legal": []
+ },
+ {
+  "id": "B1",
+  "tema": "abrir",
+  "titulo": "Como abrir o MEI passo a passo",
+  "palavras_chave": [
+   "abrir mei",
+   "como abrir",
+   "abrir cnpj",
+   "formalizar",
+   "formalize-se",
+   "quero ser mei",
+   "ccmei",
+   "cnpj mei"
+  ],
+  "resposta": "Abrir o MEI é gratuito e feito online no Portal do Empreendedor (gov.br), em “Quero ser MEI” e depois “Formalize-se”. Você precisa de uma conta gov.br de nível prata ou ouro, informa seus dados, o endereço e as atividades, e confirma. O CNPJ e o certificado (CCMEI) saem na hora. O Sebrae orienta de graça.",
+  "fonte": "Portal do Empreendedor (gov.br) - Perguntas frequentes",
+  "url": "https://www.gov.br/empresas-e-negocios/pt-br/empreendedor/perguntas-frequentes",
+  "base_legal": [
+   "LC 123/2006, art. 18-A",
+   "Resolução CGSN 140/2018"
+  ],
+  "verificado": "2026-11-14",
+  "confianca": "alta",
+  "relacionados": [
+   "B2",
+   "B3",
+   "M2"
+  ]
+ },
+ {
+  "id": "B2",
+  "tema": "abrir",
+  "titulo": "Quem pode ser MEI e quais atividades",
+  "palavras_chave": [
+   "requisitos",
+   "atividades permitidas",
+   "atividade proibida",
+   "anexo xi",
+   "vedacoes",
+   "lista de atividades",
+   "cnae",
+   "ocupacao",
+   "que atividades",
+   "quais atividades",
+   "atividade do mei"
+  ],
+  "resposta": "Só pode ser MEI quem exerce uma das atividades permitidas, listadas no Anexo XI da Resolução CGSN 140/2018, e fatura até R$ 81 mil por ano. O MEI não pode ter sócio nem ser sócio ou administrador de outra empresa. Antes de abrir, confira no Portal do Empreendedor se a sua atividade (CNAE) está na lista.",
+  "fonte": "Portal do Empreendedor (gov.br) - Perguntas frequentes",
+  "url": "https://www.gov.br/empresas-e-negocios/pt-br/empreendedor/perguntas-frequentes",
+  "base_legal": [
+   "LC 123/2006, art. 18-A",
+   "Resolução CGSN 140/2018, Anexo XI"
+  ],
+  "verificado": "2026-11-14",
+  "confianca": "alta",
+  "relacionados": [
+   "B1",
+   "D2",
+   "M1"
+  ]
+ },
+ {
+  "id": "B3",
+  "tema": "abrir",
+  "titulo": "Cuidado com golpes depois de abrir o MEI",
+  "palavras_chave": [
+   "golpe",
+   "boleto falso",
+   "cobranca falsa",
+   "fraude",
+   "site falso",
+   "email falso",
+   "cuidado",
+   "seguranca"
+  ],
+  "resposta": "Depois de abrir o MEI, aparecem cobranças e boletos falsos. Use sempre sites que terminam em .gov.br (Portal do Empreendedor), gere o DAS só no Portal ou no aplicativo MEI e desconfie de quem cobra “taxa de registro”: abrir o MEI é gratuito.",
+  "fonte": "Portal do Empreendedor (gov.br) - Perguntas frequentes",
+  "url": "https://www.gov.br/empresas-e-negocios/pt-br/empreendedor/perguntas-frequentes",
+  "base_legal": [
+   "Portal do Empreendedor (gov.br)"
+  ],
+  "verificado": "2026-11-14",
+  "confianca": "confirmar",
+  "relacionados": [
+   "B1",
+   "M2"
+  ]
+ },
+ {
+  "id": "D1",
+  "tema": "diaadia",
+  "titulo": "MEI pode ter funcionário?",
+  "palavras_chave": [
+   "funcionario",
+   "empregado",
+   "contratar",
+   "carteira assinada",
+   "clt",
+   "empregar",
+   "salario minimo",
+   "piso da categoria",
+   "fgts"
+  ],
+  "resposta": "O MEI pode ter um único empregado, que ganhe um salário mínimo ou o piso da categoria. O MEI paga 3% de INSS patronal e 8% de FGTS sobre o salário, e desconta a parte do empregado. O recolhimento é feito pelo eSocial, em guia única (DAE), com vencimento até o dia 7 do mês seguinte. Os percentuais divergem em fontes antigas: confirme antes de contratar.",
+  "fonte": "Jornal Contábil - Quanto custa um funcionário para o MEI",
+  "url": "https://www.jornalcontabil.com.br/quanto-custa-um-funcionario-para-o-mei/",
+  "base_legal": [
+   "LC 123/2006, art. 18-C",
+   "Resolução CGSN 140/2018, art. 105"
+  ],
+  "verificado": "2026-11-14",
+  "confianca": "confirmar",
+  "relacionados": [
+   "D2",
+   "M1",
+   "M2"
+  ]
+ },
+ {
+  "id": "D2",
+  "tema": "diaadia",
+  "titulo": "MEI pode ter sócio?",
+  "palavras_chave": [
+   "socio",
+   "socios",
+   "sociedade",
+   "com um socio",
+   "com socio",
+   "mei com um socio",
+   "mei com socio",
+   "parceiro",
+   "outra empresa"
+  ],
+  "resposta": "Não. O MEI não pode ter sócio, nem ser sócio ou administrador de outra empresa. Se vocês querem empreender juntos, cada um pode abrir o seu MEI, ou é preciso abrir uma microempresa (ME) no Simples Nacional.",
+  "fonte": "Portal do Empreendedor (gov.br) - Perguntas frequentes",
+  "url": "https://www.gov.br/empresas-e-negocios/pt-br/empreendedor/perguntas-frequentes",
+  "base_legal": [
+   "LC 123/2006, art. 18-A"
+  ],
+  "verificado": "2026-11-14",
+  "confianca": "alta",
+  "relacionados": [
+   "B2",
+   "A7"
+  ]
+ },
+ {
+  "id": "D3",
+  "tema": "diaadia",
+  "titulo": "Pagar o DAS em dia garante benefícios do INSS",
+  "palavras_chave": [
+   "beneficios",
+   "inss",
+   "aposentadoria",
+   "auxilio doenca",
+   "salario maternidade",
+   "pensao",
+   "previdencia",
+   "afastamento",
+   "contribuicao"
+  ],
+  "resposta": "Pagar o DAS-MEI em dia garante benefícios previdenciários, como aposentadoria por idade, auxílio por incapacidade temporária, salário-maternidade e pensão por morte para a família, respeitados os prazos de carência de cada benefício. Atrasar o DAS pode fazer você perder o direito a esses benefícios.",
+  "fonte": "Portal do Empreendedor (gov.br) - Perguntas frequentes",
+  "url": "https://www.gov.br/empresas-e-negocios/pt-br/empreendedor/perguntas-frequentes",
+  "base_legal": [
+   "LC 123/2006, art. 18-A",
+   "Lei 8.213/1991"
+  ],
+  "verificado": "2026-11-14",
+  "confianca": "alta",
+  "relacionados": [
+   "M2",
+   "D4"
+  ]
+ },
+ {
+  "id": "D4",
+  "tema": "diaadia",
+  "titulo": "Esqueci de pagar o DAS: e agora?",
+  "palavras_chave": [
+   "das atrasado",
+   "atraso",
+   "multa",
+   "juros",
+   "esqueci",
+   "divida",
+   "parcelar",
+   "regularizar",
+   "debito",
+   "cancelamento cnpj"
+  ],
+  "resposta": "Se o DAS atrasou, gere a guia atualizada no Portal do Empreendedor ou no aplicativo MEI: ela já inclui multa e juros. Quanto mais tempo passa, maior a dívida, e dívidas acumuladas podem levar ao cancelamento do CNPJ. Dá para parcelar débitos pelo Portal; confirme as condições vigentes lá.",
+  "fonte": "Portal do Empreendedor (gov.br) - Perguntas frequentes",
+  "url": "https://www.gov.br/empresas-e-negocios/pt-br/empreendedor/perguntas-frequentes",
+  "base_legal": [
+   "Resolução CGSN 140/2018"
+  ],
+  "verificado": "2026-11-14",
+  "confianca": "confirmar",
+  "relacionados": [
+   "D3",
+   "M2",
+   "M3"
+  ]
+ },
+ {
+  "id": "D5",
+  "tema": "diaadia",
+  "titulo": "Nota fiscal de serviço: Emissor Nacional (NFS-e)",
+  "palavras_chave": [
+   "nfs-e",
+   "nfse",
+   "emissor nacional",
+   "nota de servico",
+   "nota fiscal de servico",
+   "emitir nota",
+   "padrao nacional",
+   "prefeitura"
+  ],
+  "resposta": "O MEI que presta serviço emite a nota pela NFS-e Nacional (Emissor Nacional, nfse.gov.br), obrigatória para o MEI desde setembro de 2023, mesmo que a prefeitura não tenha aderido, segundo a Receita Federal. Cuidado: para ME e EPP do Simples as fontes divergem sobre a data de obrigatoriedade (setembro ou novembro de 2026): confirme.",
+  "fonte": "Receita Federal - NFS-e Nacional (apresentação)",
+  "url": "https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/publicacoes/apresentacoes/reforma-tributaria-do-consumo/nfs-e_live_rj_es.pdf/@@download/file",
+  "base_legal": [
+   "Resolução CGSN 140/2018",
+   "LC 214/2025"
+  ],
+  "verificado": "2026-11-14",
+  "confianca": "confirmar",
+  "relacionados": [
+   "M4",
+   "M5",
+   "D6"
+  ]
+ },
+ {
+  "id": "D6",
+  "tema": "diaadia",
+  "titulo": "Alvará e licenças do MEI",
+  "palavras_chave": [
+   "alvara",
+   "licenca",
+   "funcionamento",
+   "vigilancia sanitaria",
+   "corpo de bombeiros",
+   "prefeitura",
+   "ccmei alvara"
+  ],
+  "resposta": "O certificado do MEI (CCMEI) vale como alvará de funcionamento provisório. Mesmo assim, a prefeitura pode exigir licenças específicas conforme a atividade (por exemplo, vigilância sanitária para alimentos). Confirme na prefeitura da sua cidade.",
+  "fonte": "Portal do Empreendedor (gov.br) - Perguntas frequentes",
+  "url": "https://www.gov.br/empresas-e-negocios/pt-br/empreendedor/perguntas-frequentes",
+  "base_legal": [
+   "LC 123/2006, art. 8º"
+  ],
+  "verificado": "2026-11-14",
+  "confianca": "confirmar",
+  "relacionados": [
+   "B1",
+   "D5"
+  ]
+ },
+ {
+  "id": "P1",
+  "tema": "preco",
+  "titulo": "Como formar o preço de venda (markup)",
+  "palavras_chave": [
+   "preco",
+   "preco de venda",
+   "formar preco",
+   "precificar",
+   "precificacao",
+   "quanto cobrar",
+   "markup",
+   "calcular preco",
+   "valor do produto",
+   "margem"
+  ],
+  "resposta": "Método do Sebrae: some, em porcentagem do preço, as despesas de venda (taxas, comissões, impostos) e o lucro que você quer; o que sobra de 100% dividido por 100 é o divisor. Preço de venda = custo (produto + parte das despesas fixas) ÷ divisor. Use a calculadora de preço do site.",
+  "fonte": "Sebrae - Saiba como fazer seu preço de venda",
+  "url": "https://sebrae.com.br/Sebrae/Portal%20Sebrae/Arquivos/ebook_sebrae_saiba_como_fazer_seu_preco_de_venda.pdf",
+  "base_legal": [
+   "Método Sebrae (markup divisor)"
+  ],
+  "verificado": "2026-11-14",
+  "confianca": "alta",
+  "relacionados": [
+   "P2",
+   "P3",
+   "D4"
+  ]
+ },
+ {
+  "id": "P2",
+  "tema": "preco",
+  "titulo": "Markup não é margem de lucro",
+  "palavras_chave": [
+   "markup",
+   "margem",
+   "margem de lucro",
+   "diferenca markup margem",
+   "lucro",
+   "multiplicador"
+  ],
+  "resposta": "Markup é o índice que se aplica sobre o custo para chegar ao preço; margem é a parte do preço que sobra como lucro depois de pagar todos os custos. Um markup alto pode dar margem baixa se os custos foram mal calculados. Por isso é importante incluir despesas fixas, taxas e impostos na conta.",
+  "fonte": "Comunidade Sebrae PR - Preço de venda: como calcular",
+  "url": "https://sebraepr.com.br/comunidade/artigo/preco-de-venda-como-calcular",
+  "base_legal": [
+   "Método Sebrae (markup divisor)"
+  ],
+  "verificado": "2026-11-14",
+  "confianca": "alta",
+  "relacionados": [
+   "P1",
+   "P3"
+  ]
+ },
+ {
+  "id": "P3",
+  "tema": "preco",
+  "titulo": "Ponto de equilíbrio: quanto preciso vender",
+  "palavras_chave": [
+   "ponto de equilibrio",
+   "equilibrio",
+   "quanto preciso vender",
+   "pagar as contas",
+   "margem de contribuicao",
+   "faturamento minimo",
+   "custos fixos",
+   "despesas fixas"
+  ],
+  "resposta": "Ponto de equilíbrio = custos fixos ÷ margem de contribuição unitária (preço menos custos e despesas variáveis por unidade). É a quantidade mínima que você precisa vender no mês para não ter prejuízo. Acima disso, começa o lucro. A calculadora de preço do site mostra esse número.",
+  "fonte": "Sebrae - Ponto de equilíbrio",
+  "url": "https://sebrae.com.br/Sebrae/Portal%20Sebrae/UFs/PE/Anexos/Ponto%20de%20equil%C3%ADbrio%20como%20calcular%20o%20faturamento%20necess%C3%A1rio%20para%20voc%C3%AA%20obter%20lucro.pdf",
+  "base_legal": [
+   "Método Sebrae (ponto de equilíbrio)"
+  ],
+  "verificado": "2026-11-14",
+  "confianca": "alta",
+  "relacionados": [
+   "P1",
+   "P2"
   ]
  }
 ];

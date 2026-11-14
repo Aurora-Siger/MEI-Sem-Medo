@@ -1,7 +1,7 @@
 """Servidor local do MEI sem Medo: serve o site (web/) e expoe o agente de IA em /api.
 
 A chave da API fica SOMENTE aqui (variavel ANTHROPIC_API_KEY); o navegador nunca a ve.
-Uso: ANTHROPIC_API_KEY=... python src/servidor.py [--host 127.0.0.1] [--port 8000]
+Uso: ANTHROPIC_API_KEY=... (ou GEMINI_API_KEY=... MEI_PROVEDOR=gemini) python src/servidor.py [--host 127.0.0.1] [--port 8000]
 Sem chave, o site continua funcionando no modo "base verificada" (busca por palavras-chave).
 Para uso publico: coloque atras de autenticacao e defina limite de gasto na conta da API.
 """
@@ -76,7 +76,7 @@ def criar_servidor(host="127.0.0.1", port=8000, fabrica=None, disponivel=None):
 
         def do_GET(self):
             if self.path == "/api/status":
-                return self._json(200, {"agente": bool(ativo()), "modelo": agente.MODELO if ativo() else None})
+                return self._json(200, {"agente": bool(ativo()), "modelo": agente.modelo_ativo() if ativo() else None})
             return super().do_GET()
 
         def do_POST(self):
@@ -114,7 +114,7 @@ def main():
     host = a[a.index("--host") + 1] if "--host" in a else "127.0.0.1"
     port = int(a[a.index("--port") + 1]) if "--port" in a else 8000
     srv = criar_servidor(host, port)
-    modo = f"agente de IA ({agente.MODELO})" if agente.Agente.disponivel() else "base verificada (sem ANTHROPIC_API_KEY)"
+    modo = f"agente de IA ({agente.modelo_ativo()})" if agente.Agente.disponivel() else "base verificada (sem chave de API)"
     print(f"MEI sem Medo em http://{host}:{port}  ·  modo: {modo}  ·  Ctrl+C encerra")
     try:
         srv.serve_forever()

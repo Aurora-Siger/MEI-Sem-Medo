@@ -23,6 +23,7 @@ const casos=JSON.parse(process.argv[2]);
 const out={busca:casos.map(q=>{const r=M.perguntar(base,q);return [r.status,r.registro?r.registro.id:null]}),
  das:[['I',300000,30000,0],['V',300000,30000,90000],['II',4800000,100000,0],['IV',90000,8000,0]].map(a=>M.calcularDas(...a).das),
  cred:M.simularCreditos(20000,10000,8000,26.5,2000,15),
+ preco:{p:[[20,1500,100,5,0,20,40],[8,600,50,12,6,15,null],[30,2000,40,3,0,25,25]].map(a=>M.precoProduto(...a)),s:[[3000,800,100,2,10,0,0,10,null],[2000,500,80,1.5,0,5,6,10,150]].map(a=>M.precoServico(...a))},
  mei:[['comercio',12,40000,6,6000],['servicos',12,60000,6,6000],['servicos',12,70000,6,9000],['servicos',6,30000,2,9000]].map(a=>M.analisarMei(...a)),
  hib:JSON.parse(process.argv[3]).map(a=>M.simularPuroHibrido(...a)),
  hist:M.projetarHistorico(JSON.parse(process.argv[4]),JSON.parse(process.argv[5])),
@@ -84,6 +85,12 @@ for a, jsr in zip(HIB, out["hib"]):
 for d in _difere(calculadora.projetar_historico(HIST, HIST_CFG), out["hist"], "historico") +         _difere(calculadora.meses_base_rbt12("2026-11", 301234.57), out["base"], "base"):
     falhas += 1
     print("[DIVERGE]", d)
-print(f"Paridade JS x Python: {len(CASOS)} perguntas + 4 DAS + creditos + 4 cenarios MEI + {len(HIB)} puro x hibrido"
+PRECO_P = [(20, 1500, 100, 5, 0, 20, 40), (8, 600, 50, 12, 6, 15, None), (30, 2000, 40, 3, 0, 25, 25)]
+PRECO_S = [(3000, 800, 100, 2, 10, 0, 0, 10, None), (2000, 500, 80, 1.5, 0, 5, 6, 10, 150)]
+for py, jsr in zip([calculadora.preco_produto(*a) for a in PRECO_P] + [calculadora.preco_servico(*a) for a in PRECO_S], out["preco"]["p"] + out["preco"]["s"]):
+    if json.dumps(py, sort_keys=True) != json.dumps(jsr, sort_keys=True) and any(abs(py[k] - jsr[k]) > 0.011 for k in ("preco_sugerido", "preco_minimo", "lucro_mensal_estimado") if k in py and k in jsr):
+        falhas += 1
+        print("[DIVERGE] preco", py["preco_sugerido"], jsr["preco_sugerido"])
+print(f"Paridade JS x Python: {len(CASOS)} perguntas + 4 DAS + creditos + 4 cenarios MEI + 5 de preco + {len(HIB)} puro x hibrido"
       f" + historico de {len(HIST)} meses -> {'OK' if not falhas else str(falhas) + ' divergencias'}")
 sys.exit(1 if falhas else 0)

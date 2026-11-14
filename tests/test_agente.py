@@ -10,6 +10,7 @@ from types import SimpleNamespace as NS
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 import agente  # noqa: E402
+import provedores  # noqa: E402
 import sistema  # noqa: E402
 
 
@@ -132,6 +133,87 @@ ok(len(inicios) == agente.MAX_TURNOS, "historico podado em turnos inteiros")
 c = ClienteFalso(resp("end_turn", texto("x")))
 agente.Agente(BASE, c, modelo="claude-haiku-5-5").perguntar("limite MEI")
 ok("fallbacks" not in c.chamadas[0], "fallback so para modelos que suportam")
+
+# 15. ferramenta de preco via agente (Claude)
+c = ClienteFalso(resp("tool_use", uso(1, "formar_preco_produto", custo_unitario=20, despesas_fixas_mes=1500, unidades_por_mes=100, taxas_pct=5, impostos_pct=0, lucro_pct=20, preco_atual=40)),
+                 resp("end_turn", texto("Cobre R$ 46,67 por unidade.")))
+r = agente.Agente(BASE, c).perguntar("quanto cobrar pelo meu produto?")
+saida = json.loads(c.chamadas[1]["messages"][-1]["content"][0]["content"])
+ok(r["modo"] == "agente" and saida["preco_sugerido"] == 46.67 and saida["preco_atual"]["status"] == "abaixo_da_meta", "agente calcula preco com a ferramenta")
+c = ClienteFalso(resp("tool_use", uso(1, "formar_preco_produto", custo_unitario=10, despesas_fixas_mes=100, unidades_por_mes=10, taxas_pct=50, impostos_pct=30, lucro_pct=30, preco_atual=0)),
+                 resp("end_turn", texto("Pode ser?")))
+agente.Agente(BASE, c).perguntar("preco")
+ok(c.chamadas[1]["messages"][-1]["content"][0].get("is_error") is True, "preco impossivel (soma >= 100%) volta como erro para o modelo")
+
+# 16. base legal chega nas fontes
+c = ClienteFalso(resp("tool_use", uso(1, "buscar_base", consulta="limite de faturamento do MEI")), resp("end_turn", texto("R$ 81 mil [M1].")))
+ok(any("LC 123" in x for x in agente.Agente(BASE, c).perguntar("limite MEI")["fontes"][0]["base_legal"]), "fonte traz a base legal (lei/artigo)")
+
+
+# ---------------- Gemini (REST simulado) ----------------
+class TransporteFalso:
+    def __init__(self, *respostas, erro=None):
+        self.respostas, self.chamadas, self.erro = list(respostas), [], erro
+
+    def __call__(self, url, headers, corpo):
+        self.chamadas.append((url, headers, json.loads(json.dumps(corpo))))
+        if self.erro:
+            raise self.erro
+        return self.respostas.pop(0) if len(self.respostas) > 1 else self.respostas[0]
+
+
+def cand(*partes, fim="STOP"):
+    return {"candidates": [{"content": {"role": "model", "parts": list(partes)}, "finishReason": fim}]}
+
+
+def gemini(transp, modelo="gemini-teste"):
+    return agente.Agente(BASE, provedor=provedores.ProvedorGemini(transporte=transp, modelo=modelo, chave="CHAVE-TESTE"))
+
+
+t = TransporteFalso(cand({"functionCall": {"name": "buscar_base", "args": {"consulta": "limite MEI"}}, "thoughtSignature": "ASSINATURA"}),
+                    cand({"text": "O limite é R$ 81.000 por ano [M1]."}))
+r = gemini(t).perguntar("Qual o limite do MEI?")
+url, hdr, corpo = t.chamadas[0]
+ok(r["modo"] == "agente" and r["fontes"][0]["id"] == "M1" and r["ferramentas"] == ["buscar_base"], "Gemini: fluxo completo com ferramenta e fonte")
+ok("gemini-teste:generateContent" in url and hdr["x-goog-api-key"] == "CHAVE-TESTE" and "systemInstruction" in corpo, "Gemini: URL, chave no header e systemInstruction")
+decl = corpo["tools"][0]["functionDeclarations"]
+sem_args = next(d for d in decl if d["name"] == "listar_temas")
+ok("additionalProperties" not in json.dumps(decl) and decl[0]["parameters"]["type"] == "OBJECT" and "parameters" not in sem_args, "Gemini: schema convertido (tipos, sem additionalProperties, funcao sem argumentos)")
+seg = t.chamadas[1][2]["contents"]
+ok(seg[1]["role"] == "model" and seg[1]["parts"][0]["thoughtSignature"] == "ASSINATURA", "Gemini: thoughtSignature devolvida intacta")
+fr = seg[2]["parts"][0]["functionResponse"]
+ok(seg[2]["role"] == "user" and fr["name"] == "buscar_base" and fr["response"]["result"]["resultados"][0]["id"] == "M1", "Gemini: functionResponse no formato esperado")
+
+# bloqueio de seguranca, erro HTTP e historico
+ag = gemini(TransporteFalso({"promptFeedback": {"blockReason": "SAFETY"}}))
+ok(ag.perguntar("x")["modo"] == "recusa" and ag.mensagens == [], "Gemini: bloqueio de seguranca tratado")
+import urllib.error
+ag = gemini(TransporteFalso(erro=urllib.error.URLError("sem rede")))
+ok(ag.perguntar("limite MEI")["modo"] == "erro" and ag.mensagens == [], "Gemini: erro de rede tratado")
+t = TransporteFalso(cand({"text": "O passaporte custa R$ 257."}))
+ok(gemini(t).perguntar("passaporte")["modo"] == "bloqueado", "Gemini: resposta sem base tambem e bloqueada")
+t = TransporteFalso(cand({"functionCall": {"name": "buscar_base", "args": {"consulta": "limite MEI"}}}), cand({"text": "ok [M1]"}))
+ag = gemini(t)
+t.respostas = [cand({"functionCall": {"name": "buscar_base", "args": {"consulta": "limite MEI"}}}), cand({"text": "ok [M1]"})] * 20
+for _ in range(12):
+    ag.perguntar("limite MEI")
+ok(len([m for m in ag.mensagens if m["role"] == "user" and "text" in m["parts"][0]]) == agente.MAX_TURNOS, "Gemini: historico podado em turnos inteiros")
+
+# selecao de provedor por ambiente
+import os
+guarda = {k: os.environ.pop(k, None) for k in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "GEMINI_API_KEY", "GOOGLE_API_KEY", "MEI_PROVEDOR")}
+ok(not provedores.disponivel(), "sem nenhuma chave: agente indisponivel")
+os.environ["GEMINI_API_KEY"] = "k"
+ok(provedores.disponivel() and provedores.escolher().nome == "gemini", "so chave Gemini: usa Gemini")
+os.environ["ANTHROPIC_API_KEY"] = "k"
+ok(provedores.escolher().nome == "claude", "as duas chaves: Claude por padrao")
+os.environ["MEI_PROVEDOR"] = "gemini"
+ok(provedores.escolher().nome == "gemini", "MEI_PROVEDOR=gemini forca o Gemini")
+for k in ("ANTHROPIC_API_KEY", "GEMINI_API_KEY", "MEI_PROVEDOR"):
+    os.environ.pop(k, None)
+for k, v in guarda.items():
+    if v is not None:
+        os.environ[k] = v
 
 print(f"\nAgente: {'tudo OK' if not falhas else str(falhas) + ' falha(s)'}")
 sys.exit(1 if falhas else 0)

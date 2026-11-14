@@ -3,7 +3,7 @@
   const STOP = new Set("a o as os de da do das dos e em no na nos nas um uma que para por com se eu meu minha ao pra qual quais como quando posso preciso tenho ser sao vai mais".split(" "));
   const LIMIAR = 3.0, MARGEM = 0.9;
   const TEMAS = { reforma: "Reforma tributária", mei: "Obrigações do MEI", consumidor: "Direitos do consumidor (CDC/Procon)",
-    split: "Split payment", simples: "Simples Nacional: anexos e alíquotas", creditos: "Recuperação de créditos" };
+    split: "Split payment", abrir: "Abrir e formalizar o MEI", diaadia: "Dia a dia do negócio", preco: "Preço e lucro", simples: "Simples Nacional: anexos e alíquotas", creditos: "Recuperação de créditos" };
 
   const norm = (t) => t.toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9 ]/g, " ");
   const tokens = (t) => norm(t).split(" ").filter((x) => x && !STOP.has(x) && x.length > 1);
@@ -194,7 +194,48 @@
       custo_anual_mei: r2(das * 12), custo_anual_microempresa: me };
   }
 
-  const api = { ATIV_MEI, dasMei, analisarMei, norm, tokens, busca, perguntar, relacionados, TEMAS, ANEXOS, aliquotaEfetiva, calcularDas, simularCreditos,
+  // ---- Formação de preço (markup divisor) ----
+  function precoComum(base, varPct, impPct, lucroPct, fixoTotal, volume) {
+    if (!(base >= 0) || !(fixoTotal >= 0)) throw new Error("Custo e despesas fixas não podem ser negativos.");
+    for (const [n, v] of [["variáveis", varPct], ["impostos", impPct], ["lucro", lucroPct]])
+      if (!(v >= 0 && v < 100)) throw new Error(`O percentual de ${n} deve estar entre 0 e 99,99.`);
+    if (!(volume > 0)) throw new Error("A quantidade vendida por mês deve ser maior que zero.");
+    const soma = varPct + impPct + lucroPct;
+    if (soma >= 100) throw new Error(`Variáveis + impostos + lucro somam ${soma.toFixed(2).replace(".", ",")}%: precisam ficar abaixo de 100%, senão nenhum preço fecha a conta.`);
+    const fixoUnit = fixoTotal / volume, divisor = (100 - soma) / 100;
+    return { preco: (base + fixoUnit) / divisor, fixoUnit, divisor, minimo: (base + fixoUnit) / ((100 - varPct - impPct) / 100) };
+  }
+  const r4 = (x) => Math.round(x * 10000) / 10000, r1 = (x) => Math.round(x * 10) / 10;
+  function resumoPreco(c, base, varPct, impPct, volume, fixoTotal, precoAtual) {
+    const { preco, fixoUnit, divisor, minimo } = c;
+    const varV = preco * varPct / 100, impV = preco * impPct / 100, lucroV = preco - base - fixoUnit - varV - impV, mc = preco - base - varV - impV;
+    const r = { preco_sugerido: r2(preco), markup_multiplicador: r4(1 / divisor), divisor: r4(divisor),
+      composicao: { custo_direto: r2(base), custo_fixo_rateado: r2(fixoUnit), variaveis: r2(varV), impostos: r2(impV), lucro: r2(lucroV) },
+      margem_contribuicao_unit: r2(mc), ponto_equilibrio_unidades: mc > 0 ? r1(fixoTotal / mc) : null, lucro_mensal_estimado: r2(lucroV * volume),
+      preco_minimo: r2(minimo), desconto_maximo_pct: preco > 0 ? r1((1 - minimo / preco) * 100) : 0 };
+    if (precoAtual != null) {
+      if (!(precoAtual > 0)) throw new Error("O preço atual deve ser maior que zero.");
+      const lu = precoAtual * (1 - (varPct + impPct) / 100) - base - fixoUnit;
+      r.preco_atual = { valor: r2(precoAtual), lucro_unit: r2(lu), margem_pct: r1(lu / precoAtual * 100), lucro_mensal: r2(lu * volume), status: lu < 0 ? "prejuizo" : (precoAtual < preco - 0.005 ? "abaixo_da_meta" : "ok") };
+    }
+    return r;
+  }
+  function precoProduto(custo, fixos, volume, varPct, impPct, lucroPct, precoAtual = null) {
+    const c = precoComum(custo, varPct, impPct, lucroPct, fixos, volume);
+    return resumoPreco(c, custo, varPct, impPct, volume, fixos, precoAtual);
+  }
+  function precoServico(renda, fixos, horasMes, horasServico, materiais, varPct, impPct, lucroPct, precoAtual = null) {
+    if (!(horasMes > 0) || !(horasServico > 0)) throw new Error("As horas produtivas do mês e as horas do serviço devem ser maiores que zero.");
+    if (!(renda >= 0)) throw new Error("A renda desejada não pode ser negativa.");
+    const hora = (renda + fixos) / horasMes, base = materiais + hora * horasServico;
+    const c = precoComum(base, varPct, impPct, lucroPct, 0, 1);
+    const r = resumoPreco(c, base, varPct, impPct, 1, 0, precoAtual);
+    delete r.ponto_equilibrio_unidades; delete r.lucro_mensal_estimado;
+    r.valor_hora = r2(hora); r.valor_hora_com_encargos = c.divisor ? r2(hora / c.divisor) : null;
+    return r;
+  }
+
+  const api = { precoProduto, precoServico, ATIV_MEI, dasMei, analisarMei, norm, tokens, busca, perguntar, relacionados, TEMAS, ANEXOS, aliquotaEfetiva, calcularDas, simularCreditos,
     REPARTICAO, CONFIG_PADRAO, regrasAno, parcelasDoDas, simularPuroHibrido, mesIdx, somarMeses, mesesBaseRbt12, projetarHistorico };
   if (typeof module !== "undefined") module.exports = api; else root.Motor = api;
 })(typeof window !== "undefined" ? window : globalThis);

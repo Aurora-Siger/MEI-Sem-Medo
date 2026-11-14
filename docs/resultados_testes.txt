@@ -3,7 +3,7 @@
 [OK] 'Ate quando entrego a declaracao anual DASN?'                  -> ok/M3 (esperado ok/M3)
 [OK] 'MEI precisa emitir nota fiscal para pessoa fisica?'           -> ok/M4 (esperado ok/M4)
 [OK] 'O que acontece se eu ultrapassar o limite do MEI?'            -> ok/M6 (esperado ok/M6)
-[OK] 'Como abrir MEI de graca?'                                     -> ok/M7 (esperado ok/M7)
+[OK] 'Como abrir MEI de graca?'                                     -> ok/B1 (esperado ok/B1)
 [OK] 'O que sao CBS e IBS?'                                         -> ok/R1 (esperado ok/R1)
 [OK] 'O Pix vai ser taxado pela reforma?'                           -> ok/R6 (esperado ok/R6)
 [OK] 'Posso optar pelo Simples Hibrido?'                            -> ok/R5 (esperado ok/R5)
@@ -32,15 +32,26 @@
 [OK] 'como recuperar creditos de imposto?'                          -> ok/K1 (esperado ok/K1)
 [OK] 'empresa que compra de mim no Simples tem credito?'            -> ok/K2 (esperado ok/K2)
 [OK] 'vale a pena optar pelo regime regular de IBS e CBS?'          -> ok/K3 (esperado ok/K3)
+[OK] 'quero abrir meu mei, por onde comeco?'                        -> ok/B1 (esperado ok/B1)
+[OK] 'que atividades posso ter no mei?'                             -> ok/B2 (esperado ok/B2)
+[OK] 'posso contratar funcionario com carteira assinada?'           -> ok/D1 (esperado ok/D1)
+[OK] 'posso abrir mei com um socio?'                                -> ok/D2 (esperado ok/D2)
+[OK] 'esqueci de pagar o das, e agora?'                             -> ok/D4 (esperado ok/D4)
+[OK] 'como emitir nota de servico pelo emissor nacional?'           -> ok/D5 (esperado ok/D5)
+[OK] 'como calcular o preco de venda do meu produto?'               -> ok/P1 (esperado ok/P1)
+[OK] 'qual a diferenca entre markup e margem de lucro?'             -> ok/P2 (esperado ok/P2)
+[OK] 'quanto preciso vender para pagar as contas?'                  -> ok/P3 (esperado ok/P3)
+[OK] 'recebi um boleto falso de taxa de registro do mei'            -> ok/B3 (esperado ok/B3)
 
-Acuracia: 34/34 = 100%
-Tempo medio: 4.89 ms | maximo: 9.62 ms
-Base: 37 registros, 6 temas, 89 arestas no grafo - integridade OK
-[OK] base ausente: Arquivo da base nao encontrado: C:\Users\Usuario\AppData\Local\Temp\tmpl9g8p8e_\nao_existe.json
+Acuracia: 44/44 = 100%
+Tempo medio: 2.34 ms | maximo: 3.39 ms
+Base: 48 registros, 9 temas, 122 arestas no grafo - integridade OK
+[OK] base ausente: Arquivo da base nao encontrado: /tmp/tmp9tdk23al/nao_existe.json
 [OK] base vazia: Base vazia: precisa ser uma lista com ao menos 1 registro.
 [OK] base sem_campo: Registro #1 (x) sem campo(s): fonte, relacionados
 [OK] base aresta_invalida: Registro x aponta para id inexistente: ZZ
 Calculadora MEI: DAS por atividade e faixas de excesso OK
+Calculadora de preco: markup divisor, composicao, preco minimo e validacoes OK
 Simples puro x hibrido: transicao 2026-2033, teto do ISS e historico do RBT12 OK
-Modelo A: 26/26 respostas com fonte+data+aviso corretos; tamanho medio 519 caracteres
-Modelo B: 26/26 respostas com fonte+data+aviso corretos; tamanho medio 616 caracteres
+Modelo A: 36/36 respostas com fonte+data+aviso corretos; tamanho medio 557 caracteres
+Modelo B: 36/36 respostas com fonte+data+aviso corretos; tamanho medio 654 caracteres

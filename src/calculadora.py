@@ -4,6 +4,7 @@ Sao SIMULACOES didaticas. As aliquotas de IBS/CBS e a regulamentacao do Simples 
 estao em definicao; todo parametro estimado e editavel e deve ser confirmado.
 Uso: python src/calculadora.py
 """
+import json
 import math
 
 # Tabelas do Simples Nacional (LC 123/2006, anexos I a V): (limite da faixa de RBT12, aliquota nominal %, parcela a deduzir)
@@ -319,6 +320,72 @@ def analisar_mei(atividade, meses_no_ano, faturado, meses_restantes, media_previ
             "custo_anual_mei": round(das * 12, 2), "custo_anual_microempresa": me_anual}
 
 
+# ---------------- Formacao de preco (metodo do markup divisor, como ensina o Sebrae) ----------------
+def _preco_comum(base_unit, var_pct, imposto_pct, lucro_pct, fixo_total, volume):
+    """Nucleo: preco = (custo direto + custo fixo rateado) / (1 - (variaveis + impostos + lucro)).
+
+    var_pct: comissao, taxa de maquininha/marketplace etc. (% do preco). imposto_pct: % do preco que vai de imposto
+    (MEI: 0 e o DAS fixo entra nas despesas fixas). lucro_pct: lucro desejado (% do preco).
+    """
+    for nome, v in (("custo", base_unit), ("despesas fixas", fixo_total)):
+        if v < 0:
+            raise ValueError(f"{nome} não pode ser negativo.")
+    for nome, v in (("variáveis", var_pct), ("impostos", imposto_pct), ("lucro", lucro_pct)):
+        if not 0 <= v < 100:
+            raise ValueError(f"O percentual de {nome} deve estar entre 0 e 99,99.")
+    if volume <= 0:
+        raise ValueError("A quantidade vendida por mês deve ser maior que zero.")
+    soma = var_pct + imposto_pct + lucro_pct
+    if soma >= 100:
+        raise ValueError(f"Variáveis + impostos + lucro somam {soma:.2f}%: precisam ficar abaixo de 100%, senão nenhum preço fecha a conta.")
+    fixo_unit = fixo_total / volume
+    divisor = (100 - soma) / 100
+    preco = (base_unit + fixo_unit) / divisor
+    minimo = (base_unit + fixo_unit) / ((100 - var_pct - imposto_pct) / 100)   # lucro zero
+    return preco, fixo_unit, divisor, minimo
+
+
+def _resumo_preco(preco, base_unit, fixo_unit, var_pct, imposto_pct, volume, fixo_total, divisor, minimo, preco_atual):
+    var_v, imp_v = preco * var_pct / 100, preco * imposto_pct / 100
+    lucro_v = preco - base_unit - fixo_unit - var_v - imp_v
+    mc = preco - base_unit - var_v - imp_v          # margem de contribuicao unitaria
+    r = {"preco_sugerido": _r2(preco), "markup_multiplicador": round(1 / divisor, 4), "divisor": round(divisor, 4),
+         "composicao": {"custo_direto": _r2(base_unit), "custo_fixo_rateado": _r2(fixo_unit), "variaveis": _r2(var_v), "impostos": _r2(imp_v), "lucro": _r2(lucro_v)},
+         "margem_contribuicao_unit": _r2(mc),
+         "ponto_equilibrio_unidades": round(fixo_total / mc, 1) if mc > 0 else None,
+         "lucro_mensal_estimado": _r2(lucro_v * volume), "preco_minimo": _r2(minimo),
+         "desconto_maximo_pct": round((1 - minimo / preco) * 100, 1) if preco > 0 else 0.0}
+    if preco_atual is not None:
+        if preco_atual <= 0:
+            raise ValueError("O preço atual deve ser maior que zero.")
+        lucro_atual = preco_atual * (1 - (var_pct + imposto_pct) / 100) - base_unit - fixo_unit
+        r["preco_atual"] = {"valor": _r2(preco_atual), "lucro_unit": _r2(lucro_atual), "margem_pct": round(lucro_atual / preco_atual * 100, 1),
+                            "lucro_mensal": _r2(lucro_atual * volume), "status": "prejuizo" if lucro_atual < 0 else ("abaixo_da_meta" if preco_atual < preco - 0.005 else "ok")}
+    return r
+
+
+def preco_produto(custo_unit, despesas_fixas_mes, volume_mes, var_pct, imposto_pct, lucro_pct, preco_atual=None):
+    """Preco de venda de um produto. despesas_fixas_mes inclui aluguel, internet, o seu pro-labore e, no MEI, o DAS."""
+    preco, fixo_unit, divisor, minimo = _preco_comum(custo_unit, var_pct, imposto_pct, lucro_pct, despesas_fixas_mes, volume_mes)
+    return _resumo_preco(preco, custo_unit, fixo_unit, var_pct, imposto_pct, volume_mes, despesas_fixas_mes, divisor, minimo, preco_atual)
+
+
+def preco_servico(renda_desejada_mes, despesas_fixas_mes, horas_produtivas_mes, horas_do_servico, materiais, var_pct, imposto_pct, lucro_pct, preco_atual=None):
+    """Preco de um servico: valor da hora = (sua renda + despesas fixas) / horas realmente faturaveis no mes."""
+    if horas_produtivas_mes <= 0 or horas_do_servico <= 0:
+        raise ValueError("As horas produtivas do mês e as horas do serviço devem ser maiores que zero.")
+    if renda_desejada_mes < 0:
+        raise ValueError("A renda desejada não pode ser negativa.")
+    hora = (renda_desejada_mes + despesas_fixas_mes) / horas_produtivas_mes
+    # a renda e as despesas ja estao na hora; o 'lucro' aqui e margem extra sobre o preco
+    preco, _, divisor, minimo = _preco_comum(materiais + hora * horas_do_servico, var_pct, imposto_pct, lucro_pct, 0.0, 1)
+    r = _resumo_preco(preco, materiais + hora * horas_do_servico, 0.0, var_pct, imposto_pct, 1, 0.0, divisor, minimo, preco_atual)
+    r.pop("ponto_equilibrio_unidades"), r.pop("lucro_mensal_estimado")   # nao fazem sentido para um servico avulso
+    r["valor_hora"] = _r2(hora)
+    r["valor_hora_com_encargos"] = _r2(hora / divisor) if divisor else None
+    return r
+
+
 def _num(msg, padrao=None):
     while True:
         txt = input(msg).strip().replace(".", "").replace(",", ".") if padrao is None else (input(msg).strip().replace(",", ".") or str(padrao))
@@ -342,7 +409,7 @@ def _imprimir_puro_hibrido(r):
 
 def main():
     print("Calculadoras (simulação didática, NÃO é cálculo oficial). 1) DAS do Simples  2) Créditos IBS/CBS  3) Limite do MEI\n"
-          "4) Simples puro x híbrido (um mês)  5) Puro x híbrido mês a mês (histórico exportado do site)  Enter) sair")
+          "4) Simples puro x híbrido (um mês)  5) Puro x híbrido mês a mês (histórico exportado do site)\n6) Formação de preço (produto)  7) Formação de preço (serviço)  Enter) sair")
     esc = input("Opção: ").strip()
     try:
         if esc == "1":
@@ -381,6 +448,16 @@ def main():
                 h = r["hibrido"]
                 print(f"{ln['mes']:8} {ln['receita']:12.2f} {ln['rbt12']:14.2f} {r['puro']['total']:11.2f} "
                       + (f"{h['total']:11.2f} {r['diferenca']:11.2f}" if h else f"{'-':>11} {'-':>11}"))
+        elif esc == "6":
+            r = preco_produto(_num("Custo do produto por unidade (R$): "), _num("Despesas fixas do mês, com seu pró-labore (R$): "),
+                              _num("Quantas unidades vende por mês: "), _num("Taxas e comissões % do preço [0]: ", 0),
+                              _num("Impostos % do preço (MEI: 0) [0]: ", 0), _num("Lucro desejado % do preço [20]: ", 20))
+            print(json.dumps(r, ensure_ascii=False, indent=1))
+        elif esc == "7":
+            r = preco_servico(_num("Quanto quer ganhar por mês (R$): "), _num("Despesas fixas do mês (R$): "), _num("Horas faturáveis por mês: "),
+                              _num("Horas deste serviço: "), _num("Materiais deste serviço (R$) [0]: ", 0), _num("Taxas % [0]: ", 0),
+                              _num("Impostos % (MEI: 0) [0]: ", 0), _num("Margem extra % [0]: ", 0))
+            print(json.dumps(r, ensure_ascii=False, indent=1))
     except (ValueError, OSError) as e:
         print(f"Dado inválido: {e}")
 

@@ -9,18 +9,20 @@
   if (location.protocol.startsWith("http"))
     fetch("/api/status").then((r) => r.json()).then((s) => { agenteAtivo = !!s.agente; $("modo").textContent = s.agente ? "Agente de IA ativo: responde só com a base verificada e as calculadoras" : "Modo base verificada (busca por palavras-chave)"; $("modo").className = "badge " + (s.agente ? "alta" : "confirmar"); }).catch(() => {});
 
-  // ----- abas -----
-  document.querySelectorAll("nav button").forEach((b) => b.addEventListener("click", () => {
-    document.querySelectorAll("nav button").forEach((x) => x.setAttribute("aria-selected", x === b));
-    document.querySelectorAll("[role=tabpanel]").forEach((p) => (p.hidden = p.id !== "tab-" + b.dataset.tab));
-  }));
-  const abrirAba = (t) => document.querySelector(`nav button[data-tab=${t}]`).click();
+  // ----- navegação: conversa (início) + ferramentas -----
+  function abrirAba(t) {
+    document.querySelectorAll("[role=tabpanel]").forEach((p) => (p.hidden = p.id !== "tab-" + t));
+    $("voltar-barra").hidden = t === "perguntar";
+    window.scrollTo({ top: 0 });
+  }
+  document.addEventListener("click", (e) => { const b = e.target.closest("[data-aba]"); if (b) abrirAba(b.dataset.aba); });
 
   // ----- perguntar -----
   const FERRAMENTA = { A3: ["simples", "Abrir calculadora do DAS"], A4: ["simples", "Abrir calculadora do DAS"], A5: ["simples", "Abrir calculadora do DAS"], A2: ["simples", "Ver tabela dos anexos"],
     K1: ["creditos", "Abrir simulador de créditos"], K2: ["creditos", "Abrir simulador de créditos"], K3: ["creditos", "Abrir simulador de créditos"], K5: ["creditos", "Abrir simulador de créditos"],
-    M1: ["mei", "Calcular meu limite e DAS"], M2: ["mei", "Calcular meu limite e DAS"], M6: ["mei", "Calcular meu limite e DAS"], A7: ["mei", "Calcular meu limite e DAS"],
-    S1: ["split", "Ver o split payment na prática"], S2: ["split", "Ver o split payment na prática"], R5: ["hibrido", "Simular Simples puro x híbrido"] };
+    M1: ["mei", "Calcular meu limite e DAS"], D3: ["mei", "Ver meu limite e DAS"], M2: ["mei", "Calcular meu limite e DAS"], M6: ["mei", "Calcular meu limite e DAS"], A7: ["mei", "Calcular meu limite e DAS"],
+    S1: ["split", "Ver o split payment na prática"], S2: ["split", "Ver o split payment na prática"], R5: ["hibrido", "Simular Simples puro x híbrido"],
+    P1: ["preco", "Calcular o preço do meu produto"], P2: ["preco", "Calcular o preço do meu produto"], P3: ["preco", "Calcular o preço do meu produto"], D3: ["mei", "Ver meu limite e DAS"] };
   function cartao(r, extra = "") {
     const f = FERRAMENTA[r.id];
     if (f) extra += `<p><button type="button" class="ferr" data-aba="${f[0]}">${f[1]} →</button></p>`;
@@ -30,6 +32,7 @@
       <span class="badge ${r.confianca}">${r.confianca === "alta" ? "Confiabilidade alta" : "Confirmar na fonte oficial"}</span>
       <p>${esc(r.resposta)}</p>${aviso}
       <p class="fonte">Fonte: <a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.fonte)}</a> · verificado em ${esc(r.verificado)}</p>
+      ${(r.base_legal || []).length ? `<p class="legal">Base legal: ${r.base_legal.map(esc).join("; ")}</p>` : ""}
       ${rel.length ? `<div class="rel"><span>Veja também</span>${rel.map((x) => `<button type="button" data-id="${x.id}">${esc(x.titulo)}</button>`).join("")}</div>` : ""}${extra}</article>`;
   }
   const log = $("resposta");
@@ -43,11 +46,12 @@
   // ----- agente de IA (opcional: só existe quando o site é servido por src/servidor.py com ANTHROPIC_API_KEY) -----
   let agenteAtivo = false, sessao = novaSessao();
   function novaSessao() { return (self.crypto && crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now()).replace(/[^A-Za-z0-9_-]/g, "").slice(0, 40).padEnd(8, "x"); }
-  const ABA_FERRAMENTA = { analisar_mei: ["mei", "Abrir a calculadora do MEI"], calcular_das: ["simples", "Abrir a calculadora do DAS"], simular_creditos: ["creditos", "Abrir o simulador de créditos"] };
-  const NOME_FERRAMENTA = { buscar_base: "busca na base", obter_registro: "leitura de registro", listar_temas: "lista de temas", calcular_das: "cálculo do DAS", analisar_mei: "análise do MEI", simular_creditos: "simulação de créditos" };
+  const ABA_FERRAMENTA = { analisar_mei: ["mei", "Abrir a calculadora do MEI"], calcular_das: ["simples", "Abrir a calculadora do DAS"], simular_creditos: ["creditos", "Abrir o simulador de créditos"],
+    formar_preco_produto: ["preco", "Abrir a calculadora de preço"], formar_preco_servico: ["preco", "Abrir a calculadora de preço"] };
+  const NOME_FERRAMENTA = { buscar_base: "busca na base", obter_registro: "leitura de registro", listar_temas: "lista de temas", calcular_das: "cálculo do DAS", analisar_mei: "análise do MEI", simular_creditos: "simulação de créditos", formar_preco_produto: "cálculo de preço", formar_preco_servico: "cálculo de preço de serviço" };
   function html(t) { return esc(t).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br>"); }
   function cartaoAgente(r) {
-    const fontes = r.fontes.length ? `<p class="fonte">Fontes:<br>${r.fontes.map((f) => `[${esc(f.id)}] <a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.fonte)}</a> · verificado em ${esc(f.verificado)}`).join("<br>")}</p>` : "";
+    const fontes = r.fontes.length ? `<p class="fonte">Fontes:<br>${r.fontes.map((f) => `[${esc(f.id)}] <a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.fonte)}</a> · verificado em ${esc(f.verificado)}${(f.base_legal || []).length ? `<br><span class="legal">Base legal: ${f.base_legal.map(esc).join("; ")}</span>` : ""}`).join("<br>")}</p>` : "";
     const usadas = [...new Set(r.ferramentas)];
     const botoes = usadas.filter((t) => ABA_FERRAMENTA[t]).map((t) => `<button type="button" class="ferr" data-aba="${ABA_FERRAMENTA[t][0]}">${ABA_FERRAMENTA[t][1]} →</button>`).join(" ");
     const meta = usadas.length ? `<p class="fonte">Agente de IA · consultou: ${usadas.map((t) => NOME_FERRAMENTA[t] || t).join(", ")} · ${r.tempo_ms} ms</p>` : "";
@@ -76,10 +80,10 @@
     if (res.status === "desconhecida") h += `<p>Temas que eu cubro: ${Object.values(M.TEMAS).map(esc).join(", ")}. Veja a aba “Temas” ou use as calculadoras.</p>`;
     msg("bot", h + "</div>");
   }
-  msg("bot", `<div class="card"><p>Oi! Sou o assistente do MEI sem Medo. Respondo só com base em fontes verificadas e digo quando não sei. Pergunte sobre MEI, Simples, reforma tributária, split payment, créditos ou vendas. Em várias respostas eu abro a calculadora certa para você.</p></div>`);
+  msg("bot", `<div class="card"><p>Oi! Eu ajudo quem tem um pequeno negócio. Pode perguntar como abrir o MEI, quanto cobrar, impostos, nota fiscal, funcionário ou direitos do cliente. Respondo só com base em fontes oficiais e digo quando não sei.</p></div>`);
   $("form-pergunta").addEventListener("submit", (e) => { e.preventDefault(); responder($("pergunta").value); $("pergunta").value = ""; $("pergunta").focus(); });
   $("limpar").onclick = () => { log.innerHTML = ""; sessao = novaSessao(); };
-  ["Qual o limite de faturamento do MEI?", "O que é split payment?", "Qual anexo do Simples eu me encaixo?", "Como recuperar créditos de imposto?", "O cliente pode devolver compra online?"]
+  ["Quero abrir um MEI, por onde começo?", "Quanto devo cobrar pelo meu produto?", "Passei do limite do MEI, e agora?", "Posso contratar um funcionário?", "Como emitir nota fiscal?", "O que muda com a reforma tributária?"]
     .forEach((q) => { const b = document.createElement("button"); b.type = "button"; b.textContent = q; b.onclick = () => responder(q); $("exemplos").appendChild(b); });
 
   // ----- temas -----
@@ -453,4 +457,33 @@
       <p>Cliente paga <strong>${brl(v)}</strong>. <strong>${brl(imp)}</strong> (laranja) vão direto ao governo e <strong>${brl(liq)}</strong> (verde) chegam ao vendedor.</p>`;
   }
   $("form-split").addEventListener("input", split); $("form-split").addEventListener("submit", (e) => e.preventDefault()); split();
+
+  // ----- preço -----
+  const modoPreco = () => document.querySelector("input[name=p-modo]:checked").value;
+  document.querySelectorAll("input[name=p-modo]").forEach((r) => r.addEventListener("change", () => {
+    $("p-produto").hidden = modoPreco() !== "produto"; $("p-servico").hidden = modoPreco() !== "servico"; $("res-preco").innerHTML = "";
+  }));
+  $("form-preco").addEventListener("submit", (e) => {
+    e.preventDefault();
+    try {
+      const atual = $("p-atual").value.trim() ? num("p-atual") : null, v = [num("p-taxas"), num("p-imposto"), num("p-lucro")];
+      const r = modoPreco() === "produto"
+        ? M.precoProduto(num("p-custo"), num("p-fixos"), num("p-volume"), ...v, atual)
+        : M.precoServico(num("s-renda"), num("s-fixos"), num("s-horas"), num("s-horas-serv"), num("s-material") || 0, ...v, atual);
+      const c = r.composicao, total = r.preco_sugerido || 1, seg = [["c1", modoPreco() === "produto" ? "Custo" : "Seu tempo e material", c.custo_direto], ...(modoPreco() === "produto" ? [["c2", "Gastos fixos", c.custo_fixo_rateado]] : []), ["c3", "Taxas e impostos", c.variaveis + c.impostos], ["c4", "Seu lucro", c.lucro]];
+      const rotulo = modoPreco() === "produto" ? "por unidade" : "por este serviço";
+      const status = !r.preco_atual ? "" : { prejuizo: `<p class="aviso">⛔ Com o preço de hoje (${brl(r.preco_atual.valor)}) você <strong>perde ${brl(-r.preco_atual.lucro_unit)}</strong> ${rotulo}.</p>`,
+        abaixo_da_meta: `<p class="aviso">⚠ Com o preço de hoje (${brl(r.preco_atual.valor)}) você ganha ${brl(r.preco_atual.lucro_unit)} ${rotulo} (${r.preco_atual.margem_pct.toLocaleString("pt-BR")}% do preço), abaixo da sua meta.</p>`,
+        ok: `<p>✅ O preço de hoje (${brl(r.preco_atual.valor)}) já atinge a sua meta de lucro.</p>` }[r.preco_atual.status];
+      $("res-preco").innerHTML = `<div class="card"><p>Cobre, ${rotulo}:</p><div class="preco-grande">${brl(r.preco_sugerido)}</div>
+        <div class="pilha" role="img" aria-label="Composição do preço">${seg.map(([k, n, x]) => `<div class="${k}" style="width:${Math.max(x, 0) / total * 100}%"></div>`).join("")}</div>
+        <div class="leg">${seg.map(([k, n, x]) => `<span><i class="${k}"></i>${n}: ${brl(x)}</span>`).join("")}</div>${status}</div>
+        <div class="card"><h3>O que isso significa</h3><ul>
+        <li><strong>Preço mínimo: ${brl(r.preco_minimo)}.</strong> Abaixo disso você paga para vender. Na prática, dá para dar até <strong>${r.desconto_maximo_pct.toLocaleString("pt-BR")}% de desconto</strong> sobre o preço sugerido sem ter prejuízo (mas sem lucro).</li>
+        ${modoPreco() === "produto" ? `<li>Você precisa vender <strong>${r.ponto_equilibrio_unidades == null ? "mais unidades do que consegue" : r.ponto_equilibrio_unidades.toLocaleString("pt-BR") + " unidades por mês"}</strong> só para pagar as contas (ponto de equilíbrio).</li>
+        <li>Vendendo ${num("p-volume").toLocaleString("pt-BR")} unidades por mês, o lucro estimado é de <strong>${brl(r.lucro_mensal_estimado)}</strong> por mês, além do que você já separou para si nos gastos fixos.</li>` : `<li>Seu valor por hora, só para cobrir sua renda e seus gastos fixos, é <strong>${brl(r.valor_hora)}</strong>.</li>`}
+        <li>O preço é multiplicado por <strong>${r.markup_multiplicador.toLocaleString("pt-BR")}</strong> sobre o custo (markup).</li></ul>
+        <p class="fonte">Método do Sebrae. É um ponto de partida: compare com os concorrentes e com o que o seu cliente aceita pagar.</p></div>`;
+    } catch (err) { erro($("res-preco"), err); }
+  });
 })();

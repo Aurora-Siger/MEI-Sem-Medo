@@ -58,3 +58,21 @@ table.hist td .pos{white-space:normal}
 input[aria-invalid=true]{border-color:var(--warn);outline:2px solid var(--warn)}
 .pos{color:var(--warn);font-weight:600}.neg{color:var(--ok);font-weight:600}
 .aliq tr.atual td{background:var(--okbg);font-weight:600}
+
+.sec{margin:28px 0 8px;font-size:1.15rem}
+.ferramentas{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:8px 0}
+.ferr-card{text-align:left;background:var(--card);color:var(--fg);border:1px solid var(--bd);border-radius:12px;padding:14px;cursor:pointer;font:inherit;display:flex;flex-direction:column;gap:4px}
+.ferr-card strong{font-size:1.05rem}.ferr-card span{color:var(--mut);font-size:.92rem}
+.ferr-card.destaque{background:var(--ac);color:var(--acfg);border-color:var(--ac)}.ferr-card.destaque span{color:var(--acfg);opacity:.9}
+.reforma{margin:14px 0}.reforma summary{padding:4px 0}
+.voltar{background:none;border:1px solid var(--bd);color:var(--fg);padding:10px 16px;border-radius:999px;font:inherit;cursor:pointer}
+fieldset.modo-preco{border:1px solid var(--bd);border-radius:10px;margin:12px 0;display:flex;gap:18px;padding:8px 14px}
+.radio{display:inline-flex;align-items:center;gap:8px;margin:4px 0;font-weight:600}.radio input{width:auto}
+.grupo{display:contents}.grupo[hidden]{display:none}
+.preco-grande{font-size:2.2rem;font-weight:800;line-height:1.1}
+.pilha{display:flex;height:34px;border-radius:8px;overflow:hidden;margin:10px 0}.pilha div{min-width:2px}
+.leg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.9rem;color:var(--mut)}.leg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.c1{background:#6b7a8f}.c2{background:#c98a2b}.c3{background:#b5483a}.c4{background:var(--ac)}
+.legal{font-size:.88rem;color:var(--mut)}
+@media (min-width:600px){body{font-size:18px}}
+label small{display:block;font-weight:400;color:var(--mut);margin:2px 0 6px;font-size:.88rem}
