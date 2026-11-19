@@ -1,7 +1,8 @@
 """Servidor local do MEI sem Medo: serve o site (web/) e expoe o agente de IA em /api.
 
 A chave da API fica SOMENTE aqui (variavel ANTHROPIC_API_KEY); o navegador nunca a ve.
-Uso: ANTHROPIC_API_KEY=... (ou GEMINI_API_KEY=... MEI_PROVEDOR=gemini) python src/servidor.py [--host 127.0.0.1] [--port 8000]
+Uso: ANTHROPIC_API_KEY=... (ou GEMINI_API_KEY=... MEI_PROVEDOR=gemini, ou OPENROUTER_API_KEY=... MEI_PROVEDOR=openrouter)
+     python src/servidor.py [--host 127.0.0.1] [--port 8000]
 Sem chave, o site continua funcionando no modo "base verificada" (busca por palavras-chave).
 Para uso publico: coloque atras de autenticacao e defina limite de gasto na conta da API.
 """
@@ -44,15 +45,19 @@ JANELA_S, LIMITE_REQ = 60, 20       # por IP
 MAX_SESSOES, TTL_S = 200, 1800
 SESSAO_RX = re.compile(r"^[A-Za-z0-9_-]{8,64}$")
 CHAVE_RX = re.compile(r"^[A-Za-z0-9_.\-]{16,256}$")
+MODELO_RX = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:/\-]{0,99}$")   # slug do OpenRouter, ex. anthropic/claude-sonnet-5.5
+PROVEDORES = ("gemini", "claude", "openrouter")
 
 
-def fabrica_padrao(base, provedor=None, chave=None):
+def fabrica_padrao(base, provedor=None, chave=None, modelo=None):
     """Agente com a chave do .env/ambiente, ou com a chave digitada no site (so existe nesta requisicao e na sessao)."""
     if not chave:
         return agente.Agente(base)
     if provedor == "claude":
         import anthropic
         return agente.Agente(base, provedor=provedores.ProvedorClaude(client=anthropic.Anthropic(api_key=chave)))
+    if provedor == "openrouter":
+        return agente.Agente(base, provedor=provedores.ProvedorOpenRouter(chave=chave, modelo=modelo))
     return agente.Agente(base, provedor=provedores.ProvedorGemini(chave=chave))
 
 
@@ -72,16 +77,16 @@ class Estado:
             q.append(agora)
             return True
 
-    def agente(self, sid, provedor=None, chave=None):
-        if chave:   # a sessao e amarrada a chave: trocar a chave no site cria um agente novo
-            sid = sid + hashlib.sha256((provedor + chave).encode()).hexdigest()[:12]
+    def agente(self, sid, provedor=None, chave=None, modelo=None):
+        if chave:   # a sessao e amarrada a chave (e ao modelo): trocar no site cria um agente novo
+            sid = sid + hashlib.sha256((provedor + chave + (modelo or "")).encode()).hexdigest()[:12]
         agora = time.time()
         with self.lock:
             for k in [k for k, (_, t) in self.sessoes.items() if agora - t > TTL_S]:
                 del self.sessoes[k]
             if sid not in self.sessoes and len(self.sessoes) >= MAX_SESSOES:
                 return None
-            ag = self.sessoes.get(sid, (None,))[0] or (self.fabrica(self.base, provedor, chave) if chave else self.fabrica(self.base))
+            ag = self.sessoes.get(sid, (None,))[0] or (self.fabrica(self.base, provedor, chave, modelo) if chave else self.fabrica(self.base))
             self.sessoes[sid] = (ag, agora)
             return ag
 
@@ -120,8 +125,9 @@ def criar_servidor(host="127.0.0.1", port=8000, fabrica=None, disponivel=None):
                 return self._json(403, {"erro": "origem nao permitida"})
             chave = (self.headers.get("X-Chave-IA") or "").strip()
             provedor = (self.headers.get("X-Provedor-IA") or "gemini").strip().lower()
-            if chave and (provedor not in ("gemini", "claude") or not CHAVE_RX.match(chave)):
-                return self._json(400, {"erro": "chave ou provedor invalido"})
+            modelo = (self.headers.get("X-Modelo-IA") or "").strip() if provedor == "openrouter" else ""
+            if chave and (provedor not in PROVEDORES or not CHAVE_RX.match(chave) or (modelo and not MODELO_RX.match(modelo))):
+                return self._json(400, {"erro": "chave, provedor ou modelo invalido"})
             if not chave and not ativo():
                 return self._json(503, {"erro": "agente indisponivel", "modo": "base"})
             if not estado.permitido(self.client_address[0]):
@@ -136,7 +142,7 @@ def criar_servidor(host="127.0.0.1", port=8000, fabrica=None, disponivel=None):
                     raise ValueError
             except (ValueError, KeyError, TypeError, json.JSONDecodeError):
                 return self._json(400, {"erro": "requisicao invalida"})
-            ag = estado.agente(sid, provedor, chave)
+            ag = estado.agente(sid, provedor, chave, modelo or None)
             if ag is None:
                 return self._json(503, {"erro": "servidor ocupado"})
             return self._json(200, ag.perguntar(msg))

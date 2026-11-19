@@ -199,9 +199,74 @@ for _ in range(12):
     ag.perguntar("limite MEI")
 ok(len([m for m in ag.mensagens if m["role"] == "user" and "text" in m["parts"][0]]) == agente.MAX_TURNOS, "Gemini: historico podado em turnos inteiros")
 
+
+# ---------------- OpenRouter (formato OpenAI, REST simulado) ----------------
+def orr(content=None, tool_calls=None, fim="stop", **extra):
+    msg = {"role": "assistant", "content": content, **extra}
+    if tool_calls:
+        msg["tool_calls"] = tool_calls
+    return {"choices": [{"message": msg, "finish_reason": fim}]}
+
+
+def chamada_or(nome, args, cid="call_1"):
+    return {"id": cid, "type": "function", "function": {"name": nome, "arguments": args if isinstance(args, str) else json.dumps(args)}}
+
+
+def openrouter(transp, modelo="or/teste"):
+    return agente.Agente(BASE, provedor=provedores.ProvedorOpenRouter(transporte=transp, modelo=modelo, chave="CHAVE-TESTE"))
+
+
+RACIOCINIO = [{"type": "reasoning.encrypted", "data": "SEGREDO"}]
+t = TransporteFalso(orr(None, [chamada_or("buscar_base", {"consulta": "limite MEI"})], "tool_calls", reasoning_details=RACIOCINIO),
+                    orr("O limite é R$ 81.000 por ano [M1]."))
+r = openrouter(t).perguntar("Qual o limite do MEI?")
+url, hdr, corpo = t.chamadas[0]
+ok(r["modo"] == "agente" and r["fontes"][0]["id"] == "M1" and r["ferramentas"] == ["buscar_base"], "OpenRouter: fluxo completo com ferramenta e fonte")
+ok(url == provedores.URL_OPENROUTER and hdr["Authorization"] == "Bearer CHAVE-TESTE" and corpo["model"] == "or/teste"
+   and corpo["messages"][0]["role"] == "system", "OpenRouter: URL, chave Bearer, modelo e system na frente")
+fn = corpo["tools"][0]
+ok(fn["type"] == "function" and fn["function"]["name"] == "buscar_base" and fn["function"]["parameters"]["type"] == "object"
+   and len(corpo["tools"]) == len(agente.FERRAMENTAS), "OpenRouter: ferramentas no formato function/parameters")
+seg = t.chamadas[1][2]["messages"]
+ok([m["role"] for m in seg] == ["system", "user", "assistant", "tool"], "OpenRouter: historico system/user/assistant/tool")
+ok(seg[2]["tool_calls"][0]["id"] == "call_1" and seg[2]["content"] is None and seg[2]["reasoning_details"] == RACIOCINIO,
+   "OpenRouter: tool_calls e reasoning_details devolvidos, content nulo sem texto")
+ok(seg[3]["tool_call_id"] == "call_1" and json.loads(seg[3]["content"])["resultados"][0]["id"] == "M1", "OpenRouter: resultado da ferramenta amarrado ao id")
+
+# sem id na chamada e argumentos quebrados: gera id e ainda responde
+t = TransporteFalso(orr(None, [{"type": "function", "function": {"name": "listar_temas", "arguments": "{quebrado"}}], "tool_calls"),
+                    orr("Os temas estão na base [M1]."))
+openrouter(t).perguntar("quais temas?")
+seg = t.chamadas[1][2]["messages"]
+ok(seg[2]["tool_calls"][0]["id"] == seg[3]["tool_call_id"] and seg[3]["tool_call_id"], "OpenRouter: chamada sem id ganha id consistente")
+
+# recusa, erro no corpo com HTTP 200, erro de rede e historico
+ag = openrouter(TransporteFalso(orr("", fim="content_filter")))
+ok(ag.perguntar("x")["modo"] == "recusa" and ag.mensagens == [], "OpenRouter: filtro de conteudo tratado como recusa")
+ag = openrouter(TransporteFalso({"error": {"code": 402, "message": "Insufficient credits"}}))
+r = ag.perguntar("limite MEI")
+ok(r["modo"] == "erro" and "Insufficient credits" in r["detalhe"] and ag.mensagens == [], "OpenRouter: erro no corpo vira aviso com o motivo")
+ag = openrouter(TransporteFalso(erro=urllib.error.URLError("sem rede")))
+ok(ag.perguntar("limite MEI")["modo"] == "erro" and ag.mensagens == [], "OpenRouter: erro de rede tratado")
+ok(openrouter(TransporteFalso(orr("O passaporte custa R$ 257."))).perguntar("passaporte")["modo"] == "bloqueado", "OpenRouter: resposta sem base e bloqueada")
+t = TransporteFalso(orr("ok [M1]"))
+t.respostas = [orr(None, [chamada_or("buscar_base", {"consulta": "limite MEI"})], "tool_calls"), orr("ok [M1]")] * 20
+ag = openrouter(t)
+for _ in range(12):
+    ag.perguntar("limite MEI")
+ok(len([m for m in ag.mensagens if m["role"] == "user"]) == agente.MAX_TURNOS and ag.mensagens[0]["role"] == "user", "OpenRouter: historico podado em turnos inteiros")
+
 # selecao de provedor por ambiente
 import os
-guarda = {k: os.environ.pop(k, None) for k in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "GEMINI_API_KEY", "GOOGLE_API_KEY", "MEI_PROVEDOR")}
+guarda = {k: os.environ.pop(k, None) for k in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "GEMINI_API_KEY", "GOOGLE_API_KEY", "MEI_PROVEDOR",
+                                               "OPENROUTER_API_KEY", "OPENROUTER_MODELO")}
+os.environ["OPENROUTER_API_KEY"] = "k"
+ok(provedores.disponivel() and provedores.escolher().nome == "openrouter" and provedores.escolher().modelo == provedores.ProvedorOpenRouter.PADRAO,
+   "so chave OpenRouter: usa OpenRouter com o modelo padrao")
+os.environ["OPENROUTER_MODELO"] = "openai/gpt-teste"
+ok(provedores.escolher().modelo == "openai/gpt-teste", "OPENROUTER_MODELO troca o modelo")
+for k in ("OPENROUTER_API_KEY", "OPENROUTER_MODELO"):
+    os.environ.pop(k)
 ok(not provedores.disponivel(), "sem nenhuma chave: agente indisponivel")
 os.environ["GEMINI_API_KEY"] = "k"
 ok(provedores.disponivel() and provedores.escolher().nome == "gemini", "so chave Gemini: usa Gemini")
@@ -209,7 +274,12 @@ os.environ["ANTHROPIC_API_KEY"] = "k"
 ok(provedores.escolher().nome == "claude", "as duas chaves: Claude por padrao")
 os.environ["MEI_PROVEDOR"] = "gemini"
 ok(provedores.escolher().nome == "gemini", "MEI_PROVEDOR=gemini forca o Gemini")
-for k in ("ANTHROPIC_API_KEY", "GEMINI_API_KEY", "MEI_PROVEDOR"):
+os.environ["OPENROUTER_API_KEY"] = "k"
+os.environ["MEI_PROVEDOR"] = "openrouter"
+ok(provedores.disponivel() and provedores.escolher().nome == "openrouter", "MEI_PROVEDOR=openrouter forca o OpenRouter")
+del os.environ["MEI_PROVEDOR"]
+ok(provedores.escolher().nome == "claude", "as tres chaves: Claude por padrao")
+for k in ("ANTHROPIC_API_KEY", "GEMINI_API_KEY", "MEI_PROVEDOR", "OPENROUTER_API_KEY"):
     os.environ.pop(k, None)
 for k, v in guarda.items():
     if v is not None:

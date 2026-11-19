@@ -287,8 +287,9 @@
   <form method="dialog" id="form-ia">
     <h2 id="dlg-titulo">Assistente de IA</h2>
     <p>Cole sua chave de API para o assistente responder com inteligência artificial. Sem chave, o site continua funcionando com a busca na base verificada.</p>
-    <label id="ia-prov-wrap">Provedor<select id="ia-prov"><option value="gemini">Google Gemini</option><option value="claude">Claude (Anthropic)</option></select></label>
+    <label id="ia-prov-wrap">Provedor<select id="ia-prov"><option value="gemini">Google Gemini</option><option value="claude">Claude (Anthropic)</option><option value="openrouter">OpenRouter</option></select></label>
     <label for="ia-chave">Chave de API<small id="ia-ajuda">Gemini: crie em aistudio.google.com/apikey</small><input id="ia-chave" type="password" autocomplete="off" spellcheck="false" placeholder="Cole a chave aqui"></label>
+    <label id="ia-modelo-wrap" for="ia-modelo" hidden>Modelo<small>Nome do modelo no OpenRouter (veja em openrouter.ai/models). Deixe em branco para usar o padrão. Com o servidor local, escolha um que aceite ferramentas (tools).</small><input id="ia-modelo" autocomplete="off" spellcheck="false" maxlength="100" placeholder="anthropic/claude-sonnet-5.5"></label>
     <p class="fonte" id="ia-aviso">A chave fica só neste navegador (localStorage) e nunca vai para o GitHub. Não use em computador compartilhado.</p>
     <p id="ia-msg" class="fonte" aria-live="polite"></p>
     <div class="acoes"><button type="submit" value="salvar" id="ia-salvar" class="primario">Salvar</button><button type="button" id="ia-remover">Remover chave</button><button type="submit" value="fechar">Fechar</button></div>

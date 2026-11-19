@@ -1,4 +1,4 @@
-"""Agente de IA do MEI sem Medo (Claude ou Gemini + ferramentas).
+"""Agente de IA do MEI sem Medo (Claude, Gemini ou OpenRouter + ferramentas).
 
 O modelo decide quais ferramentas usar (buscar na base, calcular DAS, limite do MEI, creditos),
 mas as regras abaixo sao aplicadas em CODIGO, nao so no prompt:
@@ -6,7 +6,7 @@ mas as regras abaixo sao aplicadas em CODIGO, nao so no prompt:
   2. as fontes mostradas vem da base, nunca escritas pelo modelo;
   3. dados pessoais (CPF, CNPJ, e-mail, telefone) sao removidos antes de ir para a API;
   4. sem chave da API, o sistema cai na busca por palavras-chave (sistema.py).
-Uso: ANTHROPIC_API_KEY=... python src/agente.py   (ou GEMINI_API_KEY=... com MEI_PROVEDOR=gemini)
+Uso: ANTHROPIC_API_KEY=... python src/agente.py   (ou GEMINI_API_KEY=... com MEI_PROVEDOR=gemini, ou OPENROUTER_API_KEY=...)
 """
 import json
 import os
@@ -326,7 +326,7 @@ class Agente:
 
 def main():
     if not Agente.disponivel():
-        print("Defina ANTHROPIC_API_KEY (Claude) ou GEMINI_API_KEY (Gemini) para usar o agente de IA, ou rode src/sistema.py para a busca na base.")
+        print("Defina ANTHROPIC_API_KEY (Claude), GEMINI_API_KEY (Gemini) ou OPENROUTER_API_KEY (OpenRouter) para usar o agente de IA, ou rode src/sistema.py para a busca na base.")
         sys.exit(1)
     ag = Agente()
     print(f"MEI sem Medo - agente de IA ({ag.p.nome}: {ag.modelo}). Assistente informativo, NÃO é canal oficial. Não digite dados pessoais. 'sair' encerra.")

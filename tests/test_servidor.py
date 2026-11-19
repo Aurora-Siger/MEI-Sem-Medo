@@ -37,8 +37,8 @@ def chamar(url, corpo=None, headers=None, metodo=None):
         return e.code, e.read()
 
 
-def subir(disponivel):
-    s = servidor.criar_servidor("127.0.0.1", 0, fabrica=AgenteFalso, disponivel=lambda: disponivel)
+def subir(disponivel, fabrica=AgenteFalso):
+    s = servidor.criar_servidor("127.0.0.1", 0, fabrica=fabrica, disponivel=lambda: disponivel)
     threading.Thread(target=s.serve_forever, daemon=True).start()
     return s, f"http://127.0.0.1:{s.server_address[1]}"
 
@@ -67,6 +67,30 @@ st, b = chamar(u + "/api/status")
 ok(json.loads(b)["agente"] is False, "status: sem chave")
 st, b = chamar(u + "/api/agente", {"sessao": "sessao-teste-1", "mensagem": "oi"})
 ok(st == 503 and json.loads(b)["modo"] == "base", "sem chave: 503 e o site usa a base")
+s.shutdown()
+
+# chave digitada no site: provedor e modelo chegam a fabrica
+criados = []
+
+
+def fabrica_registra(base, provedor=None, chave=None, modelo=None):
+    criados.append((provedor, chave, modelo))
+    return AgenteFalso(base)
+
+
+s, u = subir(False, fabrica_registra)
+CHAVE_OR = "sk-or-v1-" + "a" * 64
+cab = {"X-Chave-IA": CHAVE_OR, "X-Provedor-IA": "openrouter", "X-Modelo-IA": "anthropic/claude-sonnet-5.5"}
+st, b = chamar(u + "/api/agente", {"sessao": "sessao-teste-3", "mensagem": "oi"}, cab)
+ok(st == 200 and criados[-1] == ("openrouter", CHAVE_OR, "anthropic/claude-sonnet-5.5"), "OpenRouter: chave e modelo do site chegam ao agente")
+st, b = chamar(u + "/api/agente", {"sessao": "sessao-teste-3", "mensagem": "oi"}, {**cab, "X-Modelo-IA": "openai/gpt-6-sol"})
+ok(st == 200 and json.loads(b)["texto"].startswith("eco 1") and criados[-1][2] == "openai/gpt-6-sol", "OpenRouter: trocar o modelo cria agente novo")
+st, _ = chamar(u + "/api/agente", {"sessao": "sessao-teste-3", "mensagem": "oi"}, {k: v for k, v in cab.items() if k != "X-Modelo-IA"})
+ok(st == 200 and criados[-1][2] is None, "OpenRouter: sem modelo usa o padrao")
+ok(chamar(u + "/api/agente", {"sessao": "sessao-teste-3", "mensagem": "oi"}, {**cab, "X-Modelo-IA": "a b"})[0] == 400, "OpenRouter: modelo invalido rejeitado")
+ok(chamar(u + "/api/agente", {"sessao": "sessao-teste-3", "mensagem": "oi"}, {**cab, "X-Provedor-IA": "openai"})[0] == 400, "provedor desconhecido rejeitado")
+st, _ = chamar(u + "/api/agente", {"sessao": "sessao-teste-3", "mensagem": "oi"}, {**cab, "X-Provedor-IA": "gemini"})
+ok(st == 200 and criados[-1] == ("gemini", CHAVE_OR, None), "modelo so vale para o OpenRouter")
 s.shutdown()
 print(f"\nServidor: {'tudo OK' if not falhas else str(falhas) + ' falha(s)'}")
 sys.exit(1 if falhas else 0)

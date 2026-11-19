@@ -1,4 +1,4 @@
-"""Provedores de modelo para o agente: Claude (Anthropic) e Gemini (Google).
+"""Provedores de modelo para o agente: Claude (Anthropic), Gemini (Google) e OpenRouter (varios modelos).
 
 Cada provedor guarda o historico no formato do seu fabricante e expoe a mesma interface:
   marca() / voltar(m) / adicionar_usuario(txt) / chamar(sistema, ferramentas) -> Resultado /
@@ -181,9 +181,98 @@ class ProvedorGemini:
             self.mensagens = self.mensagens[inicios[-max_turnos]:]
 
 
+# ------------------------------------------------------------------ OpenRouter
+URL_OPENROUTER = "https://openrouter.ai/api/v1/chat/completions"
+
+
+def ferramentas_openai(ferramentas):
+    """Formato 'tools' da API de chat da OpenAI, que o OpenRouter usa para todos os modelos."""
+    return [{"type": "function", "function": {"name": f["name"], "description": f["description"], "parameters": f["input_schema"]}}
+            for f in ferramentas]
+
+
+class ProvedorOpenRouter:
+    """Um so formato (o da OpenAI) para centenas de modelos: o slug escolhe o fabricante, ex. anthropic/claude-sonnet-5.5."""
+    nome = "openrouter"
+    PADRAO = "anthropic/claude-sonnet-5.5"
+
+    def __init__(self, transporte=None, modelo=None, chave=None):
+        self.transporte = transporte or transporte_http
+        self.modelo = modelo or os.environ.get("OPENROUTER_MODELO") or self.PADRAO
+        self._chave = chave
+        self.mensagens = []   # 'messages' sem o system (vai na frente a cada chamada)
+
+    @staticmethod
+    def chave_env():
+        return os.environ.get("OPENROUTER_API_KEY")
+
+    @staticmethod
+    def disponivel():
+        return bool(ProvedorOpenRouter.chave_env())
+
+    def marca(self):
+        return len(self.mensagens)
+
+    def voltar(self, m):
+        del self.mensagens[m:]
+
+    def adicionar_usuario(self, texto):
+        self.mensagens.append({"role": "user", "content": texto})
+
+    def chamar(self, sistema, ferramentas):
+        corpo = {"model": self.modelo, "max_tokens": 4096, "messages": [{"role": "system", "content": sistema}] + self.mensagens,
+                 "tools": ferramentas_openai(ferramentas), "tool_choice": "auto"}
+        chave = self._chave or self.chave_env() or ""
+        resp = self.transporte(URL_OPENROUTER, {"Content-Type": "application/json", "Authorization": f"Bearer {chave}"}, corpo)
+        if resp.get("error"):                      # o OpenRouter pode devolver erro do modelo com HTTP 200
+            raise RuntimeError(str((resp["error"] or {}).get("message") or resp["error"])[:200])
+        escolha = (resp.get("choices") or [None])[0]
+        if not escolha:
+            raise RuntimeError("resposta vazia do OpenRouter")
+        if escolha.get("error"):
+            raise RuntimeError(str((escolha["error"] or {}).get("message") or escolha["error"])[:200])
+        msg = escolha.get("message") or {}
+        if escolha.get("finish_reason") == "content_filter" or msg.get("refusal"):
+            return Resultado(recusa=True)
+        chamadas_brutas = msg.get("tool_calls") or []
+        texto = msg.get("content") or ""
+        if isinstance(texto, list):                # alguns modelos devolvem partes em vez de string
+            texto = "".join(p.get("text", "") for p in texto if isinstance(p, dict))
+        # com tool_calls e sem texto, content vai null: bloco de texto vazio e recusado por alguns fabricantes
+        guardar = {"role": "assistant", "content": texto or (None if chamadas_brutas else "")}
+        if msg.get("reasoning_details"):           # devolvido intacto: alguns modelos exigem no uso de ferramentas
+            guardar["reasoning_details"] = msg["reasoning_details"]
+        chamadas = []
+        if chamadas_brutas:
+            guardar["tool_calls"] = []
+            for n, c in enumerate(chamadas_brutas):
+                fn = c.get("function") or {}
+                cid = c.get("id") or f"call_{len(self.mensagens)}_{n}"
+                try:
+                    args = json.loads(fn.get("arguments") or "{}")
+                except ValueError:
+                    args = {}
+                guardar["tool_calls"].append({"id": cid, "type": "function", "function": {"name": fn.get("name", ""), "arguments": fn.get("arguments") or "{}"}})
+                chamadas.append((cid, fn.get("name", ""), args if isinstance(args, dict) else {}))
+        self.mensagens.append(guardar)
+        return Resultado(texto, chamadas)
+
+    def adicionar_resultados(self, resultados):
+        for i, nome, saida, _erro in resultados:
+            self.mensagens.append({"role": "tool", "tool_call_id": i, "name": nome, "content": saida})
+
+    def podar(self, max_turnos):
+        inicios = [i for i, m in enumerate(self.mensagens) if m["role"] == "user"]
+        if len(inicios) > max_turnos:
+            self.mensagens = self.mensagens[inicios[-max_turnos]:]
+
+
 def escolher(client=None, modelo=None):
-    """MEI_PROVEDOR=claude|gemini; sem ele, usa o que tiver chave (Claude primeiro)."""
+    """MEI_PROVEDOR=claude|gemini|openrouter; sem ele, usa o que tiver chave (Claude, depois Gemini, depois OpenRouter)."""
     pref = (os.environ.get("MEI_PROVEDOR") or "").lower()
+    if pref == "openrouter" or (not pref and client is None and not ProvedorClaude.disponivel() and not ProvedorGemini.disponivel()
+                                and ProvedorOpenRouter.disponivel()):
+        return ProvedorOpenRouter(modelo=modelo)
     if pref == "gemini" or (not pref and not ProvedorClaude.disponivel() and ProvedorGemini.disponivel() and client is None):
         return ProvedorGemini(modelo=modelo)
     return ProvedorClaude(client=client, modelo=modelo)
@@ -195,4 +284,6 @@ def disponivel():
         return ProvedorGemini.disponivel()
     if pref == "claude":
         return ProvedorClaude.disponivel()
-    return ProvedorClaude.disponivel() or ProvedorGemini.disponivel()
+    if pref == "openrouter":
+        return ProvedorOpenRouter.disponivel()
+    return ProvedorClaude.disponivel() or ProvedorGemini.disponivel() or ProvedorOpenRouter.disponivel()
