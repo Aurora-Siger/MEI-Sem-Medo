@@ -9,7 +9,7 @@
 **Citizen Assist AI · Global Solution 2026.2 — CitizenTech**
 
 ![Python](https://img.shields.io/badge/Python-3.8+-blue?style=flat-square&logo=python&logoColor=white)
-![Dependências](https://img.shields.io/badge/depend%C3%AAncias-nenhuma-blue?style=flat-square)
+![IA](https://img.shields.io/badge/IA-Gemini%20%C2%B7%20Claude%20%C2%B7%20OpenRouter-8E75B2?style=flat-square&logo=googlegemini&logoColor=white)
 ![JSON](https://img.shields.io/badge/Base-JSON-555?style=flat-square&logo=json&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/Site-HTML%20%2B%20JS-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
 ![GS](https://img.shields.io/badge/Global%20Solution-2026.2-orange?style=flat-square)
@@ -19,6 +19,11 @@
 ---
 
 ## O que é o MEI sem Medo?
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/tela-inicial-escuro.png">
+  <img src="docs/img/tela-inicial-claro.png" alt="Tela inicial do MEI sem Medo: campo de pergunta e a conversa da Marta com respostas que citam a fonte">
+</picture>
 
 O MEI sem Medo é um assistente de orientação para **microempreendedores individuais (MEI)**. Quem tem um negócio pequeno encontra informação espalhada, boato ("o Pix vai ser taxado") e termos difíceis, justo quando a **reforma tributária** começa a mudar as regras (CBS, IBS, split payment, nota fiscal em 2027). O assistente recebe uma pergunta ou a escolha de um tema, procura a orientação numa **base verificada**, responde em linguagem simples **com a fonte e a data de verificação** e diz "não sei" quando a base não cobre o assunto.
 
@@ -241,6 +246,7 @@ MEI-Sem-Medo
 ├── web/                      # site (só a tela): index.html, app.js, style.css, img/
 ├── tests/testes.py           # perguntas de teste: acerto, tempo, validação da base e modelos A x B
 ├── docs/
+│   ├── img/                  # capturas de tela do README
 │   ├── resultados_testes.txt # log dos testes (esperado × obtido, acerto, tempo)
 │   ├── uso_ia.md             # uso de IA no desenvolvimento
 │   └── link_video.txt        # link do vídeo (YouTube · Não listado)
@@ -249,9 +255,9 @@ MEI-Sem-Medo
 
 ---
 
-## Dependências
+## Requisitos
 
-**Nenhuma.** Todo o projeto usa só a biblioteca padrão do Python 3.8+:
+Python 3.8+ e um navegador. Não é preciso instalar bibliotecas: o projeto usa só módulos que já vêm com o Python.
 
 | Módulo | Uso |
 |--------|-----|
@@ -279,12 +285,6 @@ O protótipo responde com fonte, admite quando não sabe, trata entradas inváli
 2. Registrar, sem dados pessoais, as perguntas que caem em "não sei" para ampliar a base.
 3. Revisão mensal dos registros `confirmar`, com alerta pela data de verificação.
 4. Leitura em voz alta das respostas, para quem tem dificuldade de leitura.
-
----
-
-## Uso de IA no desenvolvimento
-
-A equipe contou com o apoio do Claude Code (Anthropic) na execução de algumas etapas do código. Todas as decisões do projeto e a revisão do que foi gerado foram feitas pelo grupo. O uso de IA dentro do protótipo e a validação das respostas estão em `docs/uso_ia.md`.
 
 ---
 
