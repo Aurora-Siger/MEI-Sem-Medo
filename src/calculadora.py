@@ -111,7 +111,7 @@ CONFIG_PADRAO = {"anexo": "III", "folha12": 0.0, "aliq_cbs": 8.8, "aliq_ibs": 17
 
 
 def _r2(x):
-    """Arredonda para centavos igual ao Math.round do JavaScript (paridade com web/motor.js)."""
+    """Arredonda para centavos (meio centavo para cima), como se faz na conta a mao."""
     return math.floor(x * 100 + 0.5) / 100
 
 

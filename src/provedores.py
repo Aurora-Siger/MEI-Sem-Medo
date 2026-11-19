@@ -18,13 +18,19 @@ class Resultado:
 
 
 # ------------------------------------------------------------------ Claude
+URL_CLAUDE = "https://api.anthropic.com/v1/messages"
+VERSAO_API_CLAUDE = "2026-10-21"
+
+
 class ProvedorClaude:
+    """API de mensagens da Anthropic chamada direto por HTTP (urllib), sem biblioteca externa."""
     nome = "claude"
     COM_FALLBACK = {"claude-opus-5-5", "claude-sonnet-5-5"}   # modelos que aceitam fallback do servidor
 
-    def __init__(self, client=None, modelo=None):
-        self._client = client
-        self.modelo = modelo or os.environ.get("MEI_MODELO") or "claude-opus-5-5"
+    def __init__(self, transporte=None, modelo=None, chave=None, client=None):
+        self.transporte = transporte or client or transporte_http   # 'client' mantido por compatibilidade
+        self.modelo = modelo or os.environ.get("MEI_MODELO") or "claude-haiku-5-5"   # o mais barato basta para buscar e calcular
+        self._chave = chave
         self.mensagens = []
 
     @staticmethod
@@ -33,10 +39,16 @@ class ProvedorClaude:
 
     @property
     def client(self):
-        if self._client is None:
-            import anthropic
-            self._client = anthropic.Anthropic()
-        return self._client
+        return self.transporte
+
+    def _cabecalhos(self):
+        h = {"Content-Type": "application/json", "anthropic-version": VERSAO_API_CLAUDE}
+        chave = self._chave or os.environ.get("ANTHROPIC_API_KEY")
+        if chave:
+            h["x-api-key"] = chave
+        elif os.environ.get("ANTHROPIC_AUTH_TOKEN"):
+            h["Authorization"] = "Bearer " + os.environ["ANTHROPIC_AUTH_TOKEN"]
+        return h
 
     def marca(self):
         return len(self.mensagens)
@@ -48,18 +60,22 @@ class ProvedorClaude:
         self.mensagens.append({"role": "user", "content": texto})
 
     def chamar(self, sistema, ferramentas):
-        kw = dict(model=self.modelo, max_tokens=16000, system=sistema, tools=ferramentas, messages=self.mensagens,
-                  output_config={"effort": "medium"})
-        if self.modelo in self.COM_FALLBACK:
-            kw.update(betas=["server-side-fallback-2026-07-01"], fallbacks="default")
-        resp = self.client.beta.messages.create(**kw)
-        if resp.stop_reason == "refusal":
+        corpo = {"model": self.modelo, "max_tokens": 16000, "system": sistema, "tools": ferramentas,
+                 "messages": self.mensagens, "output_config": {"effort": "medium"}}
+        cab = self._cabecalhos()
+        if self.modelo in self.COM_FALLBACK:          # se o modelo recusar, o servidor tenta outro modelo
+            cab["anthropic-beta"] = "server-side-fallback-2026-07-01"
+            corpo["fallbacks"] = "default"
+        resp = self.transporte(URL_CLAUDE, cab, corpo)
+        parada, blocos = resp.get("stop_reason"), resp.get("content") or []
+        if parada == "refusal":
             return Resultado(recusa=True)
-        self.mensagens.append({"role": "assistant", "content": resp.content})
-        if resp.stop_reason == "pause_turn":
+        self.mensagens.append({"role": "assistant", "content": blocos})   # devolvido inteiro na proxima chamada
+        if parada == "pause_turn":
             return Resultado(pausa=True)
-        usos = [b for b in resp.content if b.type == "tool_use"] if resp.stop_reason == "tool_use" else []
-        return Resultado("".join(b.text for b in resp.content if b.type == "text"), [(b.id, b.name, b.input) for b in usos])
+        usos = [b for b in blocos if b.get("type") == "tool_use"] if parada == "tool_use" else []
+        return Resultado("".join(b.get("text", "") for b in blocos if b.get("type") == "text"),
+                         [(b["id"], b["name"], b.get("input") or {}) for b in usos])
 
     def adicionar_resultados(self, resultados):
         itens = []
@@ -268,14 +284,17 @@ class ProvedorOpenRouter:
 
 
 def escolher(client=None, modelo=None):
-    """MEI_PROVEDOR=claude|gemini|openrouter; sem ele, usa o que tiver chave (Claude, depois Gemini, depois OpenRouter)."""
+    """MEI_PROVEDOR=claude|gemini|openrouter; sem ele, o que tiver chave, comecando pelo Gemini (tem plano gratuito)."""
     pref = (os.environ.get("MEI_PROVEDOR") or "").lower()
-    if pref == "openrouter" or (not pref and client is None and not ProvedorClaude.disponivel() and not ProvedorGemini.disponivel()
-                                and ProvedorOpenRouter.disponivel()):
+    if client is not None or pref == "claude":
+        return ProvedorClaude(client=client, modelo=modelo)
+    if pref == "openrouter":
         return ProvedorOpenRouter(modelo=modelo)
-    if pref == "gemini" or (not pref and not ProvedorClaude.disponivel() and ProvedorGemini.disponivel() and client is None):
+    if pref == "gemini" or ProvedorGemini.disponivel():
         return ProvedorGemini(modelo=modelo)
-    return ProvedorClaude(client=client, modelo=modelo)
+    if ProvedorOpenRouter.disponivel():
+        return ProvedorOpenRouter(modelo=modelo)
+    return ProvedorClaude(modelo=modelo)
 
 
 def disponivel():

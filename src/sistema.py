@@ -13,7 +13,7 @@ from pathlib import Path
 BASE = Path(__file__).resolve().parent.parent / "data" / "base.json"
 STOPWORDS = {"a", "o", "as", "os", "de", "da", "do", "das", "dos", "e", "em", "no", "na", "nos", "nas",
              "um", "uma", "que", "para", "por", "com", "se", "eu", "meu", "minha", "ao", "pra", "qual",
-             "quais", "como", "quando", "posso", "preciso", "tenho", "ser", "sao", "e", "vai", "mais"}
+             "quais", "como", "quando", "posso", "preciso", "tenho", "ser", "sao", "vai", "mais"}
 LIMIAR = 3.0        # pontuacao minima para responder
 MARGEM = 0.9        # 2o colocado >= 90% do 1o em outro tema => pergunta ambigua
 
@@ -96,8 +96,8 @@ def busca(base, pergunta):
     return [(s, r) for s, r in ranking if s > 0]
 
 
-def grafo(base, rid, profundidade=1):
-    """Topicos relacionados (grafo navegavel) a partir de um registro."""
+def grafo(base, rid):
+    """Topicos relacionados (vizinhos no grafo) de um registro: no maximo 3."""
     return [base[i] for i in base[rid]["relacionados"] if i in base][:3]
 
 
@@ -109,25 +109,25 @@ def formatar(base, r, modelo="A"):
 
 
 def perguntar(base, pergunta, modelo="A"):
-    """Retorna dict: status (ok|vazia|invalida|ambigua|desconhecida), id, texto."""
+    """Retorna dict: status (ok|vazia|invalida|ambigua|desconhecida), id, texto (e opcoes, se ambigua)."""
     if pergunta is None or not str(pergunta).strip():
-        return {"status": "vazia", "id": None, "texto": "Voce nao digitou nada. Pergunte, por exemplo: 'qual o limite do MEI?'"}
+        return {"status": "vazia", "id": None, "texto": "Você não digitou nada. Pergunte, por exemplo: “qual o limite do MEI?”"}
     pergunta = str(pergunta).strip()
     if len(pergunta) < 3 or not re.search(r"[A-Za-zÀ-ÿ]{2,}", pergunta):
-        return {"status": "invalida", "id": None, "texto": "Nao entendi. Escreva uma pergunta com palavras, por exemplo: 'MEI precisa emitir nota fiscal?'"}
+        return {"status": "invalida", "id": None, "texto": "Não entendi. Escreva uma pergunta com palavras, por exemplo: “MEI precisa emitir nota fiscal?”"}
     if len(pergunta) > 300:
         return {"status": "invalida", "id": None, "texto": "Pergunta muito longa. Tente resumir em uma frase."}
     rank = busca(base, pergunta)
     if not rank or rank[0][0] < LIMIAR:
         return {"status": "desconhecida", "id": None,
-                "texto": "Nao encontrei isso na minha base verificada, entao nao vou chutar. "
+                "texto": "Não encontrei isso na minha base verificada, então não vou chutar. "
                          "Confirme no Portal do Empreendedor (gov.br/empresas-e-negocios), na Receita Federal ou com um contador. "
-                         "Temas que eu cubro: reforma tributaria, obrigacoes do MEI e direitos do consumidor."}
+                         "Temas que eu cubro: " + ", ".join(TEMAS.values()) + "."}
     topo = rank[0]
     if len(rank) > 1 and rank[1][0] >= MARGEM * topo[0] and rank[1][1]["tema"] != topo[1]["tema"]:
         a, b = topo[1], rank[1][1]
-        return {"status": "ambigua", "id": None,
-                "texto": f"Sua pergunta pode ser sobre dois assuntos. Qual voce quer?\n  1) {a['titulo']} [{a['id']}]\n  2) {b['titulo']} [{b['id']}]"}
+        return {"status": "ambigua", "id": None, "opcoes": [a["id"], b["id"]],
+                "texto": f"Sua pergunta pode ser sobre dois assuntos. Qual você quer?\n  1) {a['titulo']} [{a['id']}]\n  2) {b['titulo']} [{b['id']}]"}
     return {"status": "ok", "id": topo[1]["id"], "texto": formatar(base, topo[1], modelo)}
 
 
@@ -163,7 +163,8 @@ def main():
         print(f"Erro na base de conhecimento: {e}")
         sys.exit(1)
     print(f"MEI sem Medo (modelo {modelo}) - assistente informativo, NAO e canal oficial. Nao digite dados pessoais.")
-    print("Comandos: 'menu' (escolher tema), 'topicos' (listar tudo), 'sair'. Ou escreva sua pergunta.")
+    print("Comandos: 'menu' (escolher tema), 'topicos' (listar tudo), '2027' (estou pronto para 2027?), 'sair'.")
+    print("Ou escreva sua pergunta.")
     while True:
         try:
             p = input("\nVoce: ")
@@ -174,6 +175,10 @@ def main():
             break
         if cmd == "menu":
             menu(base, modelo)
+            continue
+        if cmd == "2027":
+            import checklist
+            checklist.main(base)
             continue
         if cmd == "topicos":
             for r in base.values():

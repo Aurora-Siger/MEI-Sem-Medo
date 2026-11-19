@@ -44,14 +44,11 @@
 [OK] 'recebi um boleto falso de taxa de registro do mei'            -> ok/B3 (esperado ok/B3)
 
 Acuracia: 44/44 = 100%
-Tempo medio: 2.34 ms | maximo: 3.39 ms
+Tempo medio: 2.35 ms | maximo: 10.56 ms
 Base: 48 registros, 9 temas, 122 arestas no grafo - integridade OK
-[OK] base ausente: Arquivo da base nao encontrado: /tmp/tmp9tdk23al/nao_existe.json
+[OK] base ausente: Arquivo da base nao encontrado: /var/folders/2b/p81p83ns2mzbxc6gl5q7jfzw0000gn/T/tmphova5ulr/nao_existe.json
 [OK] base vazia: Base vazia: precisa ser uma lista com ao menos 1 registro.
 [OK] base sem_campo: Registro #1 (x) sem campo(s): fonte, relacionados
 [OK] base aresta_invalida: Registro x aponta para id inexistente: ZZ
-Calculadora MEI: DAS por atividade e faixas de excesso OK
-Calculadora de preco: markup divisor, composicao, preco minimo e validacoes OK
-Simples puro x hibrido: transicao 2026-2033, teto do ISS e historico do RBT12 OK
 Modelo A: 36/36 respostas com fonte+data+aviso corretos; tamanho medio 557 caracteres
 Modelo B: 36/36 respostas com fonte+data+aviso corretos; tamanho medio 654 caracteres
