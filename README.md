@@ -192,8 +192,6 @@ Cada tarefa tem **peso de 1 a 3**: "sim" soma o peso; "não" e "não sei" viram 
 | Validação da base | 4/4 falhas simuladas tratadas (ausente, vazia, campo faltando, aresta inválida) |
 | Modelos A e B | 36/36 respostas completas cada |
 
-O GitHub Actions roda esse teste automaticamente a cada push.
-
 **Interpretação:** os 100% mostram que a busca encontra o registro certo quando a pergunta usa palavras próximas às da base, mas o conjunto foi escrito pelo próprio grupo. Ao ampliar os testes encontramos falhas reais (os sinônimos "faturar" e "cliente comum" não eram reconhecidos, e "receita" casava com receita de bolo), que corrigimos na base. O tempo mede só a busca local; numa conversa real o que pesa é o tempo de leitura.
 
 ---
