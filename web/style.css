@@ -393,3 +393,23 @@ footer{text-align:center}
   .cel-msgs .bolha{max-width:92%}
 }
 .seg label{display:flex}.seg span{flex:1;display:flex;align-items:center;justify-content:center}
+
+/* ===== ilustrações da Marta ===== */
+.historia{display:grid;grid-template-columns:260px minmax(0,1fr);gap:0 40px;align-items:start}
+.ilu-duvida{width:100%;height:auto;margin-top:40px}
+.historia-txt .sec{margin-top:44px}
+.medo{grid-template-columns:96px minmax(0,1.1fr) minmax(0,1fr);gap:6px 24px}
+.destaque{align-items:flex-end;padding-bottom:0;overflow:hidden}
+.destaque-txt{padding-bottom:28px;align-self:center}
+.ilu-prancheta{flex:none;width:210px;height:auto;margin:-8px 8px 0 0;display:block}
+@media (max-width:860px){
+  .historia{grid-template-columns:1fr}
+  .ilu-duvida{position:static;width:190px;margin:32px 0 -24px}
+}
+@media (max-width:560px){
+  .destaque{align-items:stretch}
+  .destaque-txt{padding-bottom:0}
+  .ilu-prancheta{width:160px;align-self:center;margin:4px 0 0}
+}
+@media (max-width:760px){.medo{grid-template-columns:1fr;gap:6px}}
+.cel-topo img.avatar{display:block;object-fit:cover;background:var(--bd)}
