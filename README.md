@@ -32,13 +32,11 @@ O MEI sem Medo é um assistente de orientação para **microempreendedores indiv
 
 > O MEI sem Medo **não é canal oficial** da Receita Federal, do Sebrae ou do Procon e não substitui um contador. Não pedimos nem guardamos dados pessoais.
 
-**Vídeo de apresentação:** INSERIR LINK DO VIDEO
+**Vídeo de apresentação (YouTube, não listado):** https://youtu.be/G-9eBT6bJY8
 
 ---
 
 ## Equipe
-
-**Equipe Aurora Siger**
 
 | Nome | RM | Turma |
 |---|---|---|
